@@ -1,7 +1,9 @@
 import _debug from "debug";
 import { flatten } from "array-flatten";
 import methods from "methods";
+
 import { Layer } from "./layer";
+import type * as Types from "./types";
 
 const debug = _debug("router:route");
 /**
@@ -168,7 +170,7 @@ export class Route {
    *   })
    * ```
    */
-  public all(handler: unknown[] | Function): this {
+  public all(handler: Types.RouteHandler[] | Types.RequestHandler[] ): Route {
     let callbacks = flatten(slice.call(arguments));
 
     if (callbacks.length === 0) {

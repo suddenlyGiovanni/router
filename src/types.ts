@@ -85,7 +85,7 @@ type ErrorRequestHandler = (
 
 export type PathParams = string | RegExp | Array<string | RegExp>;
 
-type RequestHandlerParams =
+export type RequestHandlerParams =
   | RouteHandler
   | ErrorRequestHandler
   | Array<RouteHandler | ErrorRequestHandler>;

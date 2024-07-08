@@ -1,14 +1,9 @@
 import { createServer, OutgoingMessage } from 'node:http';
-import {
-		RouterOptions,
-		RouteHandler,
-		NextFunction,
-		RoutedRequest,
-		IncomingRequest
-} from './types';
+
+import type * as Types from './types';
 import Router from './router';
 
-const options: RouterOptions = {
+const options: Types.RouterOptions = {
 		strict: false,
 		caseSensitive: false,
 		mergeParams: false
@@ -20,7 +15,7 @@ new Router().all('/', (req, res, next) => {})
 // Router().all('/', (req, res, next) => {})
 
 const router = new Router(options);
-const routerHandler: RouteHandler = (req, res, next) => {
+const routerHandler: Types.RouteHandler = (_req, res, next) => {
 		res.setHeader('Content-Type', 'plain/text');
 		res.write('Hello')
 		res.end('world')
@@ -41,17 +36,17 @@ router['m-search']('/', routerHandler);
 
 // param
 router.param('user_id', (req, res, next, id) => {
-		type TReq = Expect<Equal<typeof req, IncomingRequest>>
+		type TReq = Expect<Equal<typeof req, Types.IncomingRequest>>
 		type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-		type TNext = Expect<Equal<typeof next, NextFunction>>
+		type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 		type P1 = Expect<Equal<typeof id, string>>
 });
 
 // middleware
 router.use((req, res, next) => {
-		type TReq = Expect<Equal<typeof req, RoutedRequest>>
+		type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
 		type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-		type TNext = Expect<Equal<typeof next, NextFunction>>
+		type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 		next();
 });
 
@@ -63,15 +58,15 @@ router.use((req, res, next) => {
 
 router.route('/')
 		.all((req, res, next) => {
-				type TReq = Expect<Equal<typeof req, RoutedRequest>>
+				type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
 				type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-				type TNext = Expect<Equal<typeof next, NextFunction>>
+				type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 				next();
 		})
 		.get((req, res, next) => {
-				type TReq = Expect<Equal<typeof req, RoutedRequest>>
+				type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
 				type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-				type TNext = Expect<Equal<typeof next, NextFunction>>
+				type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 		});
 
 
