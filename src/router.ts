@@ -321,14 +321,18 @@ export default class Router implements Types.Router {
 	 *
 	 * @public
 	 */
-	public use(handler): this {
-		var offset = 0
-		var path = '/'
+	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
+	public use(path: Types.PathParams, ...handlers: Types.RequestHandlerParams[]): Router
+	public use(...handlers: Types.RouteHandler[]): Router
+	public use(...handlers: Types.RequestHandlerParams[]): Router
+	public use(handler: unknown): Router {
+		let offset: number = 0
+		let path: string = '/'
 
 		// default path to '/'
 		// disambiguate router.use([handler])
 		if (typeof handler !== 'function') {
-			var arg = handler
+			let arg = handler
 
 			while (Array.isArray(arg) && arg.length !== 0) {
 				arg = arg[0]
@@ -341,14 +345,14 @@ export default class Router implements Types.Router {
 			}
 		}
 
-		var callbacks = flatten(slice.call(arguments, offset))
+		let callbacks = flatten(slice.call(arguments, offset))
 
 		if (callbacks.length === 0) {
 			throw new TypeError('argument handler is required')
 		}
 
 		for (let i = 0; i < callbacks.length; i++) {
-			var fn = callbacks[i]
+			let fn = callbacks[i]
 
 			if (typeof fn !== 'function') {
 				throw new TypeError('argument handler must be a function')
@@ -357,7 +361,7 @@ export default class Router implements Types.Router {
 			// add the middleware
 			debug('use %o %s', path, fn.name || '<anonymous>')
 
-			var layer = new Layer(
+			let layer = new Layer(
 				path,
 				{
 					sensitive: this.caseSensitive,
