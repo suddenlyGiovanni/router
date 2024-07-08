@@ -536,7 +536,7 @@ export default class Router implements Types.Router {
 			})
 		}
 
-		function trim_prefix(layer, layerError, layerPath, path): void {
+		function trim_prefix(layer: Layer, layerError, layerPath, path): void {
 			if (layerPath.length !== 0) {
 				// Validate path is a prefix match
 				if (layerPath !== path.substring(0, layerPath.length)) {

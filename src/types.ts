@@ -1,4 +1,5 @@
 import { type OutgoingMessage } from 'node:http'
+export type { OutgoingMessage }
 
 export type HttpMethods =
 	| 'checkout'
@@ -76,7 +77,7 @@ export interface RequestHandler {
 	(req: IncomingRequest, res: OutgoingMessage, next: NextFunction): void
 }
 
-type ErrorRequestHandler = (
+export type ErrorRequestHandler = (
 	err: any,
 	req: IncomingRequest,
 	res: OutgoingMessage,

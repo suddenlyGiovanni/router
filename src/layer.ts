@@ -1,5 +1,6 @@
 import pathtoRegexp from 'path-to-regexp'
-import { Route } from './route'
+
+import type { Route } from './route'
 
 import type * as Types from './types'
 
@@ -21,14 +22,10 @@ const hasOwnProperty = Object.prototype.hasOwnProperty
 export class Layer {
 	public method?: undefined | Types.HttpMethods
 	public route?: Route
-
-	private handle: {
-		(error: Error, req: Request, res: Response, next: Function): void
-		(req: Request, res: Response, next: Function): void
-	}
-	private name: string = '<anonymous>'
+	private handle: Types.RouteHandler | Types.ErrorRequestHandler
+	public readonly name: string = '<anonymous>'
 	private params: undefined | {} = undefined
-	private path: undefined | Types.PathParams = undefined
+	public path: undefined | Types.PathParams = undefined
 	private regexp: RegExp & {
 		keys: string[]
 		fast_star: boolean
@@ -43,10 +40,7 @@ export class Layer {
 			strict?: undefined | boolean
 			sensitive?: undefined | boolean
 		},
-		fn: {
-			(error: Error, req: Request, res: Response, next: Function): void
-			(req: Request, res: Response, next: Function): void
-		},
+		fn: Types.RouteHandler | Types.ErrorRequestHandler,
 	) {
 		debug('new %o', path)
 		let opts = options || {}
@@ -71,7 +65,12 @@ export class Layer {
 	 * @param {function} next
 	 * @api private
 	 */
-	handle_error(error: Error, req: Request, res: Response, next: Function): void {
+	handle_error(
+		error: Error,
+		req: Types.IncomingRequest,
+		res: Types.OutgoingMessage,
+		next: Types.NextFunction,
+	): void {
 		let fn = this.handle
 
 		if (fn.length !== 4) {
@@ -80,7 +79,7 @@ export class Layer {
 		}
 
 		try {
-			fn(error, req, res, next)
+			;(fn as Types.ErrorRequestHandler)(error, req, res, next)
 		} catch (err) {
 			next(err)
 		}
@@ -94,7 +93,11 @@ export class Layer {
 	 * @param {function} next
 	 * @api private
 	 */
-	handle_request(req: Request, res: Response, next: Function): void {
+	handle_request(
+		req: Types.RoutedRequest,
+		res: Types.OutgoingMessage,
+		next: Types.NextFunction,
+	): void {
 		let fn = this.handle
 
 		if (fn.length > 3) {
@@ -103,7 +106,7 @@ export class Layer {
 		}
 
 		try {
-			fn(req, res, next)
+			;(fn as Types.RouteHandler)(req, res, next)
 		} catch (err) {
 			next(err)
 		}
@@ -183,7 +186,7 @@ export class Layer {
 			return decodeURIComponent(val)
 		} catch (err) {
 			if (err instanceof URIError) {
-				err.message = "Failed to decode param '" + val + "'"
+				err.message = `Failed to decode param '${val}'`
 				err.status = 400
 			}
 
