@@ -13,14 +13,6 @@ const debug = _debug('router:route')
 
 const slice = Array.prototype.slice
 
-/* istanbul ignore next */
-const defer =
-	typeof setImmediate === 'function'
-		? setImmediate
-		: function (fn): void {
-				process.nextTick(fn.bind.apply(fn, arguments))
-			}
-
 /**
  * Expose `Route`.
  */
@@ -114,7 +106,7 @@ export class Route {
 
 			// max sync stack
 			if (++sync > 100) {
-				return defer(next, err)
+				return setImmediate(next, err)
 			}
 
 			var layer
@@ -277,7 +269,7 @@ Route.prototype.dispatch = function dispatch(req, res, done) {
 
 		// max sync stack
 		if (++sync > 100) {
-			return defer(next, err)
+			return setImmediate(next, err)
 		}
 
 		var layer
