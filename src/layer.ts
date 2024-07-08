@@ -42,7 +42,7 @@ export class Layer {
 		this.name = fn.name
 		// this.params = undefined
 		// this.path = undefined
-		this.regexp = pathToRegexp(path, this.keys, opts)
+		this.regexp = pathToRegexp(path as string, this.keys, opts)
 
 		// set fast path flags
 		this.regexp.fast_star = path === '*'

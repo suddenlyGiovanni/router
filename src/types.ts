@@ -56,7 +56,7 @@ export interface NextFunction {
 	(err?: any): void
 }
 
-type Route = Record<HttpMethods, RouterHandler<Route>> & {
+export type Route = Record<HttpMethods, RouterHandler<Route>> & {
 	path: string
 	all: RouterHandler<Route>
 }

@@ -16,8 +16,8 @@ const slice = Array.prototype.slice
 /**
  * Expose `Route`.
  */
-export class Route {
-	private path: Types.PathParams
+export class Route implements Types.Route {
+	public path: Types.PathParams
 	private stack: Layer[] = []
 
 	// route handlers for various http methods
@@ -71,16 +71,16 @@ export class Route {
 	 *
 	 * @private
 	 */
-	dispatch(req: Request, res: Response, done: Function): void {
-		let idx = 0
-		let stack = this.stack
-		let sync = 0
+	dispatch(req: Types.RoutedRequest, res: Types.OutgoingMessage, done: Types.NextFunction): void {
+		let idx: number = 0
+		let stack: Layer[] = this.stack
+		let sync: number = 0
 
 		if (stack.length === 0) {
 			return done()
 		}
 
-		var method = typeof req.method === 'string' ? req.method.toLowerCase() : req.method
+		let method = typeof req.method === 'string' ? req.method.toLowerCase() : req.method
 
 		if (method === 'head' && !this.methods['head']) {
 			method = 'get'
@@ -108,15 +108,16 @@ export class Route {
 
 			// max sync stack
 			if (++sync > 100) {
-				return setImmediate(next, err)
+				setImmediate(next, err)
+				return
 			}
 
-			var layer
-			var match
+			let layer: Layer
+			let match: undefined | boolean = undefined
 
 			// find next matching layer
 			while (match !== true && idx < stack.length) {
-				layer = stack[idx++]
+				layer = stack[idx++]!
 				match = !layer.method || layer.method === method
 			}
 
@@ -126,9 +127,9 @@ export class Route {
 			}
 
 			if (err) {
-				layer.handle_error(err, req, res, next)
+				layer!.handle_error(err, req, res, next)
 			} else {
-				layer.handle_request(req, res, next)
+				layer!.handle_request(req, res, next)
 			}
 
 			sync = 0
