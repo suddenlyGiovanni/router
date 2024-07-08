@@ -1,27 +1,44 @@
 import _debug from 'debug'
-import { methods } from './methods'
-import { œflatten as flatten } from 'array-flatten'
-
 import { Layer } from './layer'
 import type * as Types from './types'
 
 const debug = _debug('router:route')
-/**
- * Module variables.
- * @private
- */
-
-const slice = Array.prototype.slice
 
 /**
  * Expose `Route`.
  */
 export class Route implements Types.Route {
-	public path: Types.PathParams
-	private stack: Layer[] = []
-
+	public checkout: Types.RouterHandler<Route> = Route.makeRouterHandler('checkout')
+	public connect: Types.RouterHandler<Route> = Route.makeRouterHandler('connect')
+	public copy: Types.RouterHandler<Route> = Route.makeRouterHandler('copy')
+	public delete: Types.RouterHandler<Route> = Route.makeRouterHandler('delete')
+	public get: Types.RouterHandler<Route> = Route.makeRouterHandler('get')
+	public head: Types.RouterHandler<Route> = Route.makeRouterHandler('head')
+	public lock: Types.RouterHandler<Route> = Route.makeRouterHandler('lock')
+	public ['m-search']: Types.RouterHandler<Route> = Route.makeRouterHandler('m-search')
+	public merge: Types.RouterHandler<Route> = Route.makeRouterHandler('merge')
+	public mkactivity: Types.RouterHandler<Route> = Route.makeRouterHandler('mkactivity')
+	public mkcol: Types.RouterHandler<Route> = Route.makeRouterHandler('mkcol')
+	public move: Types.RouterHandler<Route> = Route.makeRouterHandler('move')
+	public notify: Types.RouterHandler<Route> = Route.makeRouterHandler('notify')
+	public options: Types.RouterHandler<Route> = Route.makeRouterHandler('options')
+	public patch: Types.RouterHandler<Route> = Route.makeRouterHandler('patch')
+	public post: Types.RouterHandler<Route> = Route.makeRouterHandler('post')
+	public propfind: Types.RouterHandler<Route> = Route.makeRouterHandler('propfind')
+	public proppatch: Types.RouterHandler<Route> = Route.makeRouterHandler('proppatch')
+	public purge: Types.RouterHandler<Route> = Route.makeRouterHandler('purge')
+	public put: Types.RouterHandler<Route> = Route.makeRouterHandler('put')
+	public report: Types.RouterHandler<Route> = Route.makeRouterHandler('report')
+	public search: Types.RouterHandler<Route> = Route.makeRouterHandler('search')
+	public subscribe: Types.RouterHandler<Route> = Route.makeRouterHandler('subscribe')
+	public trace: Types.RouterHandler<Route> = Route.makeRouterHandler('trace')
+	public unlock: Types.RouterHandler<Route> = Route.makeRouterHandler('unlock')
+	public unsubscribe: Types.RouterHandler<Route> = Route.makeRouterHandler('unsubscribe')
+	public path: Types.PathParams & string
 	// route handlers for various http methods
 	private methods: Record<Types.HttpMethods, unknown> = Object.create(null)
+	private stack: Layer[] = []
+
 	/**
 	 * Initialize `Route` with the given `path`,
 	 *
@@ -31,6 +48,34 @@ export class Route implements Types.Route {
 	constructor(path: Types.PathParams) {
 		debug('new %o', path)
 		this.path = path
+	}
+
+	private static makeRouterHandler(method: Types.HttpMethods): Types.RouterHandler<Route> {
+		return function (this: Route, ...handlers: Types.RequestHandlerParams[]): Route {
+			const callbacks = handlers.slice().flat()
+
+			if (callbacks.length === 0) {
+				throw new TypeError('argument handler is required')
+			}
+
+			for (let i = 0; i < callbacks.length; i++) {
+				const fn = callbacks[i]
+
+				if (typeof fn !== 'function') {
+					throw new TypeError('argument handler must be a function')
+				}
+
+				debug('%s %s', method, this.path)
+
+				const layer = new Layer('/', {}, fn)
+				layer.method = method
+
+				this.methods[method] = true
+				this.stack.push(layer)
+			}
+
+			return this
+		}
 	}
 
 	/**
@@ -64,6 +109,60 @@ export class Route implements Types.Route {
 		}
 
 		return methods.map((method) => method.toUpperCase() as Uppercase<typeof method>)
+	}
+
+	/**
+	 * Add a handler for all HTTP verbs to this route.
+	 *
+	 * @param {array|function} handlers
+	 * @return {Route} for chaining
+	 *
+	 * Behaves just like middleware and can respond or call `next`
+	 * to continue processing.
+	 *
+	 * @example
+	 * You can use multiple `.all` call to add multiple handlers.
+	 * ```ts
+	 *   function check_something(req, res, next){
+	 *     next()
+	 *   }
+	 *
+	 *   function validate_user(req, res, next){
+	 *     next()
+	 *   }
+	 *
+	 *   route
+	 *   .all(validate_user)
+	 *   .all(check_something)
+	 *   .get(function(req, res, next){
+	 *     res.send('hello world')
+	 *   })
+	 * ```
+	 */
+	public all(...handlers: Types.RouteHandler[]): Route
+	public all(...handlers: Types.RequestHandlerParams[]): Route
+	public all(...handlers: Types.RouteHandler[] | Types.RequestHandlerParams[]): Route {
+		let callbacks = handlers.slice().flat()
+
+		if (callbacks.length === 0) {
+			throw new TypeError('argument handler is required')
+		}
+
+		for (let i = 0; i < callbacks.length; i++) {
+			let fn = callbacks[i]
+
+			if (typeof fn !== 'function') {
+				throw new TypeError('argument handler must be a function')
+			}
+
+			let layer = new Layer('/', {}, fn)
+			layer.method = undefined
+
+			this.methods._all = true
+			this.stack.push(layer)
+		}
+
+		return this
 	}
 
 	/**
@@ -135,86 +234,4 @@ export class Route implements Types.Route {
 			sync = 0
 		}
 	}
-
-	/**
-	 * Add a handler for all HTTP verbs to this route.
-	 *
-	 * @param {array|function} handler
-	 * @return {Route} for chaining
-	 *
-	 * Behaves just like middleware and can respond or call `next`
-	 * to continue processing.
-	 *
-	 * @example
-	 * You can use multiple `.all` call to add multiple handlers.
-	 * ```ts
-	 *   function check_something(req, res, next){
-	 *     next()
-	 *   }
-	 *
-	 *   function validate_user(req, res, next){
-	 *     next()
-	 *   }
-	 *
-	 *   route
-	 *   .all(validate_user)
-	 *   .all(check_something)
-	 *   .get(function(req, res, next){
-	 *     res.send('hello world')
-	 *   })
-	 * ```
-	 */
-	public all(...handlers: Types.RouteHandler[]): Route
-	public all(...handlers: Types.RequestHandlerParams[]): Route
-	public all(...handlers: Types.RouteHandler[] | Types.RequestHandlerParams[]): Route {
-		let callbacks = handlers.slice().flat()
-
-		if (callbacks.length === 0) {
-			throw new TypeError('argument handler is required')
-		}
-
-		for (let i = 0; i < callbacks.length; i++) {
-			let fn = callbacks[i]
-
-			if (typeof fn !== 'function') {
-				throw new TypeError('argument handler must be a function')
-			}
-
-			let layer = new Layer('/', {}, fn)
-			layer.method = undefined
-
-			this.methods._all = true
-			this.stack.push(layer)
-		}
-
-		return this
-	}
 }
-
-methods.forEach(function (method) {
-	Route.prototype[method] = function (handler) {
-		var callbacks = flatten(slice.call(arguments))
-
-		if (callbacks.length === 0) {
-			throw new TypeError('argument handler is required')
-		}
-
-		for (var i = 0; i < callbacks.length; i++) {
-			var fn = callbacks[i]
-
-			if (typeof fn !== 'function') {
-				throw new TypeError('argument handler must be a function')
-			}
-
-			debug('%s %s', method, this.path)
-
-			var layer = Layer('/', {}, fn)
-			layer.method = method
-
-			this.methods[method] = true
-			this.stack.push(layer)
-		}
-
-		return this
-	}
-})
