@@ -1,9 +1,8 @@
 import _debug from 'debug'
 import { methods } from './methods'
-import { flatten } from 'array-flatten'
+import { œflatten as flatten } from 'array-flatten'
 
 import { Layer } from './layer'
-import { RequestHandlerParams, RouteHandler } from './types'
 import type * as Types from './types'
 
 const debug = _debug('router:route')
