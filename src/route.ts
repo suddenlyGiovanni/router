@@ -25,7 +25,7 @@ const defer =
  * Expose `Route`.
  */
 export class Route {
-	private path: string
+	private path: Types.PathParams
 	private stack: Layer[] = []
 
 	// route handlers for various http methods
@@ -36,7 +36,7 @@ export class Route {
 	 * @param {String} path
 	 * @api private
 	 */
-	constructor(path: string) {
+	constructor(path: Types.PathParams) {
 		debug('new %o', path)
 		this.path = path
 	}

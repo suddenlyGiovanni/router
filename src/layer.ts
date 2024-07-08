@@ -1,5 +1,7 @@
 import pathtoRegexp from 'path-to-regexp'
 
+import type * as Types from './types'
+
 import _debug from 'debug'
 
 const debug = _debug('router:layer')
@@ -22,7 +24,7 @@ export class Layer {
 	}
 	private name: string = '<anonymous>'
 	private params: undefined | {} = undefined
-	private path: undefined | string = undefined
+	private path: undefined | Types.PathParams = undefined
 	private regexp: RegExp & {
 		keys: string[]
 		fast_star: boolean
@@ -31,9 +33,11 @@ export class Layer {
 	private keys: unknown[] = []
 
 	constructor(
-		path: string | RegExp | string[],
-		options: object & {
-			end: unknown
+		path: Types.PathParams,
+		options: {
+			end?: undefined | boolean
+			strict?: undefined | boolean
+			sensitive?: undefined | boolean
 		},
 		fn: {
 			(error: Error, req: Request, res: Response, next: Function): void
