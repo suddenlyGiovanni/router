@@ -11,5 +11,20 @@
 	},
   "formatter": {
 	"enabled": true
+  },
+  "javascript": {
+	"formatter": {
+	  "arrowParentheses": "always",
+	  "bracketSpacing": true,
+	  "enabled": true,
+	  "indentStyle": "tab",
+	  "indentWidth": 2,
+	  "lineEnding": "lf",
+	  "lineWidth": 100,
+	  "quoteProperties": "asNeeded",
+	  "quoteStyle": "single",
+	  "semicolons": "asNeeded",
+	  "trailingCommas": "all"
+	}
   }
 }
