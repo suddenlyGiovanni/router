@@ -1,32 +1,32 @@
 import { type OutgoingMessage } from "node:http";
 
-type HttpMethods =
-  | "get"
-  | "post"
-  | "put"
-  | "head"
-  | "delete"
-  | "options"
-  | "trace"
+export type HttpMethods =
+  | "checkout"
+  | "connect"
   | "copy"
+  | "delete"
+  | "get"
+  | "head"
   | "lock"
+  | "m-search"
+  | "merge"
+  | "mkactivity"
   | "mkcol"
   | "move"
-  | "purge"
+  | "notify"
+  | "options"
+  | "patch"
+  | "post"
   | "propfind"
   | "proppatch"
-  | "unlock"
+  | "purge"
+  | "put"
   | "report"
-  | "mkactivity"
-  | "checkout"
-  | "merge"
-  | "m-search"
-  | "notify"
-  | "subscribe"
-  | "unsubscribe"
-  | "patch"
   | "search"
-  | "connect";
+  | "subscribe"
+  | "trace"
+  | "unlock"
+  | "unsubscribe";
 
 export interface RouterOptions {
   strict?: boolean;
@@ -90,7 +90,7 @@ type RequestHandlerParams =
   | ErrorRequestHandler
   | Array<RouteHandler | ErrorRequestHandler>;
 
-interface RouterMatcher<T> {
+export interface RouterMatcher<T> {
   (path: PathParams, ...handlers: RouteHandler[]): T;
   (path: PathParams, ...handlers: RequestHandlerParams[]): T;
 }

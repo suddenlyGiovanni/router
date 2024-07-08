@@ -1,5 +1,7 @@
+import {RouteHandler} from 'index'
 import { type OutgoingMessage } from "node:http";
 import * as process from "node:process";
+import {RouterMatcher} from './types'
 import type * as Types from "./types";
 
 import d from "debug";
@@ -682,13 +684,25 @@ export default class Router implements Types.Router {
 
     param();
   }
+
+
+
+  private static makeMethodHandler(method:Types.HttpMethods): Types.RouterMatcher<Router> {
+    return function routerMatcher(this: Router,  path, ...handlers) {
+    let route = this.route(path)
+    route[method].apply(route, handlers)
+    return this;
+    }
+  }
+
+  public get: Types.RouterMatcher<Router> = Router.makeMethodHandler('get')
 }
 
 // create Router#VERB functions
 methods.concat("all").forEach(function (method) {
-  Router.prototype[method] = function (path) {
+  Router.prototype[method] = function (path, ...handlers) {
     var route = this.route(path);
-    route[method].apply(route, slice.call(arguments, 1));
+    route[method].apply(route, handlers);
     return this;
   };
 });
