@@ -466,7 +466,7 @@ export default class Router implements Types.Router {
 			// find next matching layer
 			let layer: Layer
 			var match
-			var route
+			var route: Route
 
 			while (match !== true && idx < stack.length) {
 				layer = stack[idx++]
@@ -493,8 +493,8 @@ export default class Router implements Types.Router {
 					continue
 				}
 
-				var method = req.method
-				var has_method = route._handles_method(method)
+				var method = req?.method
+				var has_method: boolean = route._handles_method(method)
 
 				// build up automatic options response
 				if (!has_method && method === 'OPTIONS' && methods) {

@@ -1,4 +1,5 @@
 import pathtoRegexp from 'path-to-regexp'
+import { Route } from './route'
 
 import type * as Types from './types'
 
@@ -18,6 +19,9 @@ const hasOwnProperty = Object.prototype.hasOwnProperty
  */
 
 export class Layer {
+	public method?: undefined | Types.HttpMethods
+	public route?: Route
+
 	private handle: {
 		(error: Error, req: Request, res: Response, next: Function): void
 		(req: Request, res: Response, next: Function): void
