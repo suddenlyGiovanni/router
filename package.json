@@ -22,7 +22,7 @@
     "@tsconfig/node22": "^22.0.0",
     "@tsconfig/strictest": "^2.0.5",
     "@types/debug": "^4.1.12",
-    "@types/path-to-regexp": "^1.7.0",
+    "@types/path-to-regexp": "1.0.29",
     "after": "0.8.2",
     "eslint": "8.34.0",
     "eslint-plugin-markdown": "3.0.0",

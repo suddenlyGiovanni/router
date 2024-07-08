@@ -1,4 +1,4 @@
-import pathtoRegexp from 'path-to-regexp'
+import pathToRegexp from 'path-to-regexp'
 
 import type { Route } from './route'
 
@@ -7,13 +7,6 @@ import type * as Types from './types'
 import _debug from 'debug'
 
 const debug = _debug('router:layer')
-
-/**
- * Module variables.
- * @private
- */
-
-const hasOwnProperty = Object.prototype.hasOwnProperty
 
 /**
  * Expose `Layer`.
@@ -27,18 +20,18 @@ export class Layer {
 	private params: undefined | {} = undefined
 	public path: undefined | Types.PathParams = undefined
 	private regexp: RegExp & {
-		keys: string[]
-		fast_star: boolean
-		fast_slash: boolean
+		keys?: string[]
+		fast_star?: boolean
+		fast_slash?: boolean
 	}
-	private keys: unknown[] = []
+	private keys: string[] = []
 
 	constructor(
 		path: Types.PathParams,
 		options: {
-			end?: undefined | boolean
-			strict?: undefined | boolean
-			sensitive?: undefined | boolean
+			end?: boolean
+			strict?: boolean
+			sensitive?: boolean
 		},
 		fn: Types.RouteHandler | Types.ErrorRequestHandler,
 	) {
@@ -49,7 +42,7 @@ export class Layer {
 		this.name = fn.name
 		// this.params = undefined
 		// this.path = undefined
-		this.regexp = pathtoRegexp(path, (this.keys = []), opts)
+		this.regexp = pathToRegexp(path, this.keys, opts)
 
 		// set fast path flags
 		this.regexp.fast_star = path === '*'
@@ -161,7 +154,7 @@ export class Layer {
 			let prop = key.name
 			let val = this.decode_param(match[i])
 
-			if (val !== undefined || !hasOwnProperty.call(params, prop)) {
+			if (val !== undefined || !Object.prototype.hasOwnProperty.call(params, prop)) {
 				params[prop] = val
 			}
 		}
