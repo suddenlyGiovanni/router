@@ -142,20 +142,20 @@ export class Route implements Types.Route {
 	public all(...handlers: Types.RouteHandler[]): Route
 	public all(...handlers: Types.RequestHandlerParams[]): Route
 	public all(...handlers: Types.RouteHandler[] | Types.RequestHandlerParams[]): Route {
-		let callbacks = handlers.slice().flat()
+		const callbacks = handlers.slice().flat()
 
 		if (callbacks.length === 0) {
 			throw new TypeError('argument handler is required')
 		}
 
 		for (let i = 0; i < callbacks.length; i++) {
-			let fn = callbacks[i]
+			const fn = callbacks[i]
 
 			if (typeof fn !== 'function') {
 				throw new TypeError('argument handler must be a function')
 			}
 
-			let layer = new Layer('/', {}, fn)
+			const layer = new Layer('/', {}, fn)
 			layer.method = undefined
 
 			this.methods._all = true
@@ -186,8 +186,6 @@ export class Route implements Types.Route {
 		}
 
 		req.route = this
-
-		next()
 
 		function next(err?: any): void {
 			// signal to exit route
@@ -233,5 +231,7 @@ export class Route implements Types.Route {
 
 			sync = 0
 		}
+
+		next()
 	}
 }
