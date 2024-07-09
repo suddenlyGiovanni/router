@@ -119,4 +119,119 @@ describe('restore', () => {
 			return result
 		}
 	})
+
+	testRestore(4, function restore<
+		Obj extends Record<string, any>,
+		Keys extends keyof Obj,
+		Fn extends (...args: any[]) => any,
+	>(fn: Fn, obj: Obj, ...keys: Keys[]) {
+		const originalValues = keys.reduce(
+			(acc, key) => {
+				acc[key] = obj[key]
+				return acc
+			},
+			{} as Partial<Obj>,
+		)
+
+		// Using an arrow function here captures the `this` context lexically
+		return (...args: any[]) => {
+			// Restore original values
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			keys.forEach((key) => {
+				// @ts-expect-error
+				obj[key] = originalValues[key]
+			})
+
+			// Directly call the function without `apply`, as `this` is lexically bound
+			return fn(...args)
+		}
+	})
+
+	testRestore(5, function restore5<
+		Obj extends Record<string, any>,
+		Keys extends (keyof Obj)[],
+		Fn extends (...args: any[]) => any,
+	>(fn: Fn, obj: Obj, ...keys: [...Keys]): (...args: Parameters<Fn>) => ReturnType<Fn> {
+		const originalValues = keys.reduce(
+			(acc, key) => {
+				acc[key] = obj[key]
+				return acc
+			},
+			{} as Partial<Obj>,
+		)
+
+		return (...args) => {
+			// Restore original values
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			keys.forEach((key) => {
+				obj[key] = originalValues[key]
+			})
+			return fn(...args)
+		}
+	})
+
+	test('restore 6 function behavior', () => {
+		function restore6<
+			Obj extends Record<string, any>,
+			Keys extends (keyof Obj)[],
+			Fn extends (...args: any[]) => any,
+		>(fn: Fn, obj: Obj, ...keys: [...Keys]): (...args: Parameters<Fn>) => ReturnType<Fn> {
+			const originalValues = keys.reduce(
+				(acc, key) => {
+					acc[key] = obj[key]
+					return acc
+				},
+				{} as Partial<Obj>,
+			)
+
+			return (...args) => {
+				// Restore original values
+				// biome-ignore lint/complexity/noForEach: <explanation>
+				keys.forEach((key) => {
+					obj[key] = originalValues[key]
+				})
+				return fn(...args)
+			}
+		}
+
+		// Initial object
+		const obj = { a: 1, b: 2, c: 42 }
+
+		// Assert initial object properties
+		assert.strictEqual(obj.a, 1, 'Initial value of a should be 1')
+		assert.strictEqual(obj.b, 2, 'Initial value of b should be 2')
+		assert.strictEqual(obj.c, 42, 'Initial value of b should be 42')
+
+		// Function to be passed to restore (does nothing in this test)
+		const fn = (num: number) => {
+			obj.a = 10
+			return num * 2
+		}
+
+		// Modify object properties
+		obj.a = 3
+		obj.b = 4
+
+		// Assert modified object properties
+		assert.strictEqual(obj.a, 3, 'Value of a after modification should be 3')
+		assert.strictEqual(obj.b, 4, 'Value of b after modification should be 4')
+		assert.strictEqual(obj.c, 42, 'Value of b after modification should be 42')
+
+		// Call restore to save current state and get a restore function
+		const restoreFn = restore6(fn, obj, 'a', 'b')
+
+		// Modify properties again
+		obj.a = 5
+		obj.b = 6
+
+		// Use the restore function to restore original properties
+		const x = restoreFn(42)
+
+		// Assert properties are restored to their original values
+		// Assert properties are restored to their values at the time of the restore function call
+		assert.strictEqual(obj.a, 10, 'Value of a after restore should be 10')
+		assert.strictEqual(obj.b, 4, 'Value of b after restore should be 4')
+		assert.strictEqual(obj.c, 42, 'Value of b after restore should be 42')
+		assert.strictEqual(x, 84)
+	})
 })
