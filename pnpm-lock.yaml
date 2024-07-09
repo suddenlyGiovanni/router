@@ -42,9 +42,15 @@ importers:
       '@types/node':
         specifier: ^20.14.9
         version: 20.14.9
+      '@types/parseurl':
+        specifier: ^1.3.3
+        version: 1.3.3
       '@types/path-to-regexp':
         specifier: 1.0.29
         version: 1.0.29
+      '@types/utils-merge':
+        specifier: ^0.0.31
+        version: 0.0.31
       after:
         specifier: 0.8.2
         version: 0.8.2
@@ -239,11 +245,17 @@ packages:
   '@types/node@20.14.9':
     resolution: {integrity: sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==}
 
+  '@types/parseurl@1.3.3':
+    resolution: {integrity: sha512-eamlh+uXpNIG2yVdl6UdBTR3B6jtmJl/JWTNTQAN1K3VH1s5F6UPOhgLwCnU9FJ7R/PnUsRN9zFSpMcxwa2Ndg==}
+
   '@types/path-to-regexp@1.0.29':
     resolution: {integrity: sha512-Xw+ElS7RdMgf8VxY2gk+IWkzvJLqi1GfKdBsDKsgTEKHnKqAnARBo+u2o2FhsZKJQezGlJxZFGIr+P8DozRu9Q==}
 
   '@types/unist@2.0.10':
     resolution: {integrity: sha512-IfYcSBWE3hLpBg8+X2SEa8LVkJdJEkT2Ese2aaLs3ptGdVtABxndrMaxuFlQ1qdFf9Q5rDvDpxI3WwgvKFAsQA==}
+
+  '@types/utils-merge@0.0.31':
+    resolution: {integrity: sha512-YyMQ/CjEy0vLdXGUj8h/+SAwNrysJohxBWMNdAzXge0kVPEKGfiz5YuYBlQDjQsEa4apy4w++4+bYRFbg2PY4w==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -1570,9 +1582,15 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
+  '@types/parseurl@1.3.3':
+    dependencies:
+      '@types/node': 20.14.9
+
   '@types/path-to-regexp@1.0.29': {}
 
   '@types/unist@2.0.10': {}
+
+  '@types/utils-merge@0.0.31': {}
 
   acorn-jsx@5.3.2(acorn@8.12.0):
     dependencies:
