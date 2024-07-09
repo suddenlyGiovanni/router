@@ -288,7 +288,37 @@ export default class Router implements Types.Router {
 
 	public param(name: string, handler: Types.RequestParamHandler): Router
 	public param(callback: (name: string, matcher: RegExp) => Types.RequestParamHandler): Router
-	public param(name: string, fn: Function): Router {
+	public param(name: string, fn: Function): Router
+	public param(
+		...args:
+			| [name: string, handler: Types.RequestParamHandler]
+			| [callback: (name: string, matcher: RegExp) => Types.RequestParamHandler]
+	): Router {
+		if (args.length < 1 || args.length > 2) {
+			throw new TypeError('this function has an arity of either one or two')
+		}
+
+		if (args.length === 1) {
+			const [callback] = args
+			if (typeof callback === 'function') {
+				throw new TypeError('callback must be a function')
+			}
+
+			// TODO do stuff with unary signature overloading
+		}
+
+		if (args.length === 2) {
+			const [name, handler] = args
+			if (typeof name !== 'string') {
+				throw new TypeError('argument name must be a string')
+			}
+			if (typeof handler !== 'function') {
+				throw new TypeError('argument handler must be a function')
+			}
+
+			// TODO: do stuff with binary signature overloading
+		}
+
 		if (!name) {
 			throw new TypeError('argument name is required')
 		}
