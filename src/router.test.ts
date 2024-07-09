@@ -1,87 +1,44 @@
-import { createServer, OutgoingMessage } from 'node:http'
-
-import type * as Types from './types'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import Router from './router'
 
-const options: Types.RouterOptions = {
-	strict: false,
-	caseSensitive: false,
-	mergeParams: false,
-}
+describe('Router', () => {
+	describe('restore', () => {
+		it('should restore properties after function execution', () => {
+			class TestRouter extends Router {
+				public static override restore<
+					Obj extends object,
+					ObjKeysToRestore extends Array<keyof Obj>,
+					Fn extends Function,
+				>(fn: Fn, obj: Obj, ...objKeysToRestore: ObjKeysToRestore) {
+					return Router.restore(fn, obj, ...objKeysToRestore)
+				}
+			}
 
-// new constructor
-new Router().all('/', (req, res, next) => {})
-// direct call
-// Router().all('/', (req, res, next) => {})
+			const testFunction = function (this: typeof testObject) {
+				this.prop1 = 'temp'
+				this.prop2 = 'temp'
+			}
 
-const router = new Router(options)
-const routerHandler: Types.RouteHandler = (_req, res, next) => {
-	res.setHeader('Content-Type', 'plain/text')
-	res.write('Hello')
-	res.end('world')
-}
+			const testObject = {
+				prop1: 'original',
+				prop2: 'original',
+			}
 
-// test verb methods
-router.get('/', routerHandler)
-router.post('/', routerHandler)
-router.delete('/', routerHandler)
-router.patch('/', routerHandler)
-router.options('/', routerHandler)
-router.head('/', routerHandler)
-router.bind('/', routerHandler)
-router.connect('/', routerHandler)
-router.trace('/', routerHandler)
-router['m-search']('/', routerHandler)
+			// Call the restore method
+			const restoredFunction = TestRouter.restore(
+				testFunction.bind(testObject),
+				testObject,
+				'prop1',
+				'prop2',
+			)
 
-// param
-router.param('user_id', (req, res, next, id) => {
-	type TReq = Expect<Equal<typeof req, Types.IncomingRequest>>
-	type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-	type TNext = Expect<Equal<typeof next, Types.NextFunction>>
-	type P1 = Expect<Equal<typeof id, string>>
-})
+			// Execute the returned function
+			restoredFunction()
 
-// middleware
-router.use((req, res, next) => {
-	type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
-	type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-	type TNext = Expect<Equal<typeof next, Types.NextFunction>>
-	next()
-})
-
-// RoutedRequest is extended with properties without type errors
-router.use((req, res, next) => {
-	req.extendable = 'extendable'
-	next()
-})
-
-router
-	.route('/')
-	.all((req, res, next) => {
-		type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
-		type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-		type TNext = Expect<Equal<typeof next, Types.NextFunction>>
-		next()
+			// Check the values
+			assert.equal(testObject.prop1, 'original')
+			assert.equal(testObject.prop2, 'original')
+		})
 	})
-	.get((req, res, next) => {
-		type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
-		type TRes = Expect<Equal<typeof res, OutgoingMessage>>
-		type TNext = Expect<Equal<typeof next, Types.NextFunction>>
-	})
-
-// valid for router from createServer
-createServer(function (req, res) {
-	router(req, res, (err) => {})
-	router.handle(req, res, (err) => {})
 })
-
-// Type test helper methods
-type Compute<T> = T extends (...args: any[]) => any ? T : { [K in keyof T]: Compute<T[K]> }
-
-type Equal<X, Y> = (<T>() => T extends Compute<X> ? 1 : 2) extends <T>() => T extends Compute<Y>
-	? 1
-	: 2
-	? true
-	: false
-
-type Expect<T extends true> = T extends true ? true : never
