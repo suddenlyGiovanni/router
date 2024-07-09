@@ -1,11 +1,10 @@
 import type * as http from 'node:http'
-import type * as Types from './types'
-
 import d from 'debug'
 import parseUrl from 'parseurl'
 import mixin from 'utils-merge'
 import { œflatten as flatten } from 'array-flatten'
 
+import type * as Types from './types'
 import { Layer } from './layer'
 import { Route } from './route'
 
@@ -87,7 +86,7 @@ export default class Router implements Types.Router {
 	private static generateOptionsResponder(
 		res: Types.OutgoingMessage,
 		methods: Uppercase<Types.HttpMethods>[],
-	) {
+	): (fn: Types.NextFunction, err?: any) => void {
 		return function onDone(fn: Types.NextFunction, err?: any): void {
 			if (err || methods.length === 0) {
 				return fn(err)
@@ -103,9 +102,9 @@ export default class Router implements Types.Router {
 	 * @param {IncomingMessage} req
 	 * @private
 	 */
-	private static getPathname(req: http.IncomingMessage) {
+	private static getPathname(req: http.IncomingMessage): undefined | null | string {
 		try {
-			return parseUrl(req).pathname
+			return parseUrl(req)?.pathname
 		} catch (err) {
 			return undefined
 		}
@@ -160,13 +159,16 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private static mergeParams(params, parent) {
+	private static mergeParams<
+		Params extends Record<string, string>,
+		Parent extends Record<string, string>,
+	>(params: Params, parent: Parent) {
 		if (typeof parent !== 'object' || !parent) {
 			return params
 		}
 
 		// make copy of parent for base
-		var obj = mixin({}, parent)
+		const obj: Parent = mixin({}, parent)
 
 		// simple non-numeric merging
 		if (!(0 in params) || !(0 in parent)) {
@@ -574,7 +576,9 @@ export default class Router implements Types.Router {
 			}
 
 			// Capture one-time layer values
-			req.params = self.mergeParams ? Router.mergeParams(layer.params, parentParams) : layer.params
+			req.params = self.mergeParams
+				? Router.mergeParams(layer.params, parentParams) //
+				: layer.params
 			var layerPath = layer.path
 
 			// this should be done for the layer
