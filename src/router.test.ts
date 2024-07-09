@@ -66,4 +66,26 @@ describe('restore', () => {
 			return fn.apply(this, arguments)
 		}
 	})
+
+	testRestore(2, function restore<
+		Obj extends object,
+		ObjKeysToRestore extends Array<keyof Obj>,
+		Fn extends Function,
+	>(fn: Fn, obj: Obj, ...objKeysToRestore: ObjKeysToRestore) {
+		const props: ObjKeysToRestore = new Array(objKeysToRestore.length) as ObjKeysToRestore
+		const vals = new Array(objKeysToRestore.length)
+
+		for (let i = 0; i < props.length; i++) {
+			props[i] = objKeysToRestore[i]!
+			vals[i] = obj[props[i]!]
+		}
+
+		return function <This>(this: This) {
+			// restore vals
+			for (let i = 0; i < props.length; i++) {
+				obj[props[i]!] = vals[i]
+			}
+			return fn.apply(this, arguments)
+		}
+	})
 })
