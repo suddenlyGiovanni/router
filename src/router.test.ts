@@ -6,11 +6,12 @@ describe('restore', () => {
 	function testRestore(version: number, restoreStrategy: Function) {
 		test(`restore ${version.toString()} function behavior`, () => {
 			// Initial object
-			const obj = { a: 1, b: 2 }
+			const obj = { a: 1, b: 2, c: 42 }
 
 			// Assert initial object properties
 			assert.strictEqual(obj.a, 1, 'Initial value of a should be 1')
 			assert.strictEqual(obj.b, 2, 'Initial value of b should be 2')
+			assert.strictEqual(obj.c, 42, 'Initial value of b should be 42')
 
 			// Function to be passed to restore (does nothing in this test)
 			const fn = () => {}
@@ -22,6 +23,7 @@ describe('restore', () => {
 			// Assert modified object properties
 			assert.strictEqual(obj.a, 3, 'Value of a after modification should be 3')
 			assert.strictEqual(obj.b, 4, 'Value of b after modification should be 4')
+			assert.strictEqual(obj.c, 42, 'Value of b after modification should be 42')
 
 			// Call restore to save current state and get a restore function
 			const restoreFn = restoreStrategy(fn, obj, 'a', 'b')
@@ -37,6 +39,7 @@ describe('restore', () => {
 			// Assert properties are restored to their values at the time of the restore function call
 			assert.strictEqual(obj.a, 3, 'Value of a after restore should be 3')
 			assert.strictEqual(obj.b, 4, 'Value of b after restore should be 4')
+			assert.strictEqual(obj.c, 42, 'Value of b after restore should be 42')
 		})
 	}
 
@@ -86,6 +89,34 @@ describe('restore', () => {
 				obj[props[i]!] = vals[i]
 			}
 			return fn.apply(this, arguments)
+		}
+	})
+
+	testRestore(3, function restore<
+		Obj extends Record<string, unknown>,
+		Keys extends keyof Obj,
+		Fn extends (...args: unknown[]) => unknown,
+	>(fn: Fn, obj: Obj, ...keys: [Keys]) {
+		const originalValues = keys.reduce(
+			(acc, key) => {
+				acc[key] = obj[key]
+				return acc
+			},
+			{} as Partial<Obj>,
+		)
+
+		return function (this: any, ...args: unknown[]) {
+			// Restore original values
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			keys.forEach((key) => {
+				// @ts-expect-error
+				obj[key] = originalValues[key]
+			})
+
+			// Call the original function
+			const result = fn.apply(this, args)
+
+			return result
 		}
 	})
 })
