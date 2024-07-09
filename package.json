@@ -32,6 +32,7 @@
 		"nyc": "15.1.0",
 		"safe-buffer": "5.2.1",
 		"supertest": "6.3.3",
+		"tsx": "^4.16.2",
 		"typescript": "^5.5.3"
 	},
 	"files": ["lib/", "LICENSE", "HISTORY.md", "README.md", "SECURITY.md", "index.js", "index.d.ts"],
@@ -41,10 +42,12 @@
 		}
 	},
 	"engines": {
-		"node": ">= 0.8"
+		"node": ">= 22"
 	},
 	"scripts": {
 		"lint": "eslint .",
+		"test:unit": "node --import=tsx --inspect --test **/*.test.ts",
+		"test:unit:watch": "pnpm run test:unit --watch",
 		"test": "mocha --reporter spec --bail --check-leaks test/",
 		"test-ci": "nyc --reporter=lcov --reporter=text npm test",
 		"test-cov": "nyc --reporter=text npm test",
