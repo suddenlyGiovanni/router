@@ -70,7 +70,7 @@ export default class Router implements Types.Router {
 
 	private caseSensitive: undefined | boolean = undefined
 	private mergeParams: undefined | boolean = undefined
-	private params: {} = {}
+	private params: Record<string, unknown[]> = {}
 	private stack: Layer[] = []
 	private strict: undefined | boolean = undefined
 
@@ -123,11 +123,13 @@ export default class Router implements Types.Router {
 			return undefined
 		}
 
-		var searchIndex = url.indexOf('?')
-		var pathLength = searchIndex !== -1 ? searchIndex : url.length
-		var fqdnIndex = url.substring(0, pathLength).indexOf('://')
+		let searchIndex: number = url.indexOf('?')
+		let pathLength: number = searchIndex !== -1 ? searchIndex : url.length
+		let fqdnIndex: number = url.substring(0, pathLength).indexOf('://')
 
-		return fqdnIndex !== -1 ? url.substring(0, url.indexOf('/', 3 + fqdnIndex)) : undefined
+		return fqdnIndex !== -1
+			? url.substring(0, url.indexOf('/', 3 + fqdnIndex)) //
+			: undefined
 	}
 
 	private static makeMethodHandler(method: Types.HttpMethods): Types.RouterMatcher<Router> {
@@ -286,39 +288,7 @@ export default class Router implements Types.Router {
 		return this
 	}
 
-	public param(name: string, handler: Types.RequestParamHandler): Router
-	public param(callback: (name: string, matcher: RegExp) => Types.RequestParamHandler): Router
-	public param(name: string, fn: Function): Router
-	public param(
-		...args:
-			| [name: string, handler: Types.RequestParamHandler]
-			| [callback: (name: string, matcher: RegExp) => Types.RequestParamHandler]
-	): Router {
-		if (args.length < 1 || args.length > 2) {
-			throw new TypeError('this function has an arity of either one or two')
-		}
-
-		if (args.length === 1) {
-			const [callback] = args
-			if (typeof callback === 'function') {
-				throw new TypeError('callback must be a function')
-			}
-
-			// TODO do stuff with unary signature overloading
-		}
-
-		if (args.length === 2) {
-			const [name, handler] = args
-			if (typeof name !== 'string') {
-				throw new TypeError('argument name must be a string')
-			}
-			if (typeof handler !== 'function') {
-				throw new TypeError('argument handler must be a function')
-			}
-
-			// TODO: do stuff with binary signature overloading
-		}
-
+	public param(name: string, handler: Types.RequestParamHandler): Router {
 		if (!name) {
 			throw new TypeError('argument name is required')
 		}
@@ -327,11 +297,11 @@ export default class Router implements Types.Router {
 			throw new TypeError('argument name must be a string')
 		}
 
-		if (!fn) {
+		if (!handler) {
 			throw new TypeError('argument fn is required')
 		}
 
-		if (typeof fn !== 'function') {
+		if (typeof handler !== 'function') {
 			throw new TypeError('argument fn must be a function')
 		}
 
@@ -341,7 +311,7 @@ export default class Router implements Types.Router {
 			params = this.params[name] = []
 		}
 
-		params.push(fn)
+		params.push(handler)
 
 		return this
 	}
