@@ -1,14 +1,14 @@
 import type * as http from 'node:http'
+import { œflatten as flatten } from 'array-flatten'
 import d from 'debug'
 import parseUrl from 'parseurl'
 import mixin from 'utils-merge'
-import { œflatten as flatten } from 'array-flatten'
 
-import type * as Types from './types'
 import { Layer } from './layer'
 import { Route } from './route'
+import type * as Types from './types'
 
-let debug = d('router')
+const debug = d('router')
 
 /**
  * Module variables.
@@ -206,13 +206,13 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	protected static restore<
+	public static restore<
 		Obj extends object,
 		ObjKeysToRestore extends Array<keyof Obj>,
 		Fn extends Function,
 	>(fn: Fn, obj: Obj, ...objKeysToRestore: ObjKeysToRestore) {
-		let props: ObjKeysToRestore = new Array(objKeysToRestore.length) as ObjKeysToRestore
-		let vals = new Array(objKeysToRestore.length)
+		const props: ObjKeysToRestore = new Array(objKeysToRestore.length) as ObjKeysToRestore
+		const vals = new Array(objKeysToRestore.length)
 
 		for (let i = 0; i < props.length; i++) {
 			props[i] = objKeysToRestore[i]!
@@ -224,7 +224,6 @@ export default class Router implements Types.Router {
 			for (let i = 0; i < props.length; i++) {
 				obj[props[i]!] = vals[i]
 			}
-
 			return fn.apply(this, arguments)
 		}
 	}

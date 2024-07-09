@@ -1,10 +1,11 @@
-import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { describe, it } from 'node:test'
 import Router from './router'
 
 describe('Router', () => {
 	describe('restore', () => {
 		it('should restore properties after function execution', () => {
+			// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 			class TestRouter extends Router {
 				public static override restore<
 					Obj extends object,
