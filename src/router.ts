@@ -205,6 +205,7 @@ export default class Router implements Types.Router {
 	 * Restore obj props after function
 	 *
 	 * @private
+	 * @internal
 	 */
 	public static restore<
 		Obj extends object,
