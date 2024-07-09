@@ -17,7 +17,7 @@ export class Layer {
 	public route?: Route
 	private handle: Types.RouteHandler | Types.ErrorRequestHandler
 	public readonly name: string = '<anonymous>'
-	private params: undefined | {} = undefined
+	private params: undefined | Record<string, string> = undefined
 	public path: undefined | Types.PathParams = undefined
 	private regexp: RegExp & {
 		keys?: string[]
@@ -114,7 +114,7 @@ export class Layer {
 	 * @api private
 	 */
 	match(path: string): boolean {
-		let match: undefined | null | RegExpExecArray = undefined
+		let match: null | RegExpExecArray = null
 
 		if (path != null) {
 			// fast path non-ending match for / (any path matches)
@@ -169,7 +169,6 @@ export class Layer {
 	 * @return {string}
 	 * @private
 	 */
-
 	private decode_param(val: string): string {
 		if (typeof val !== 'string' || val.length === 0) {
 			return val
@@ -180,6 +179,7 @@ export class Layer {
 		} catch (err) {
 			if (err instanceof URIError) {
 				err.message = `Failed to decode param '${val}'`
+				// @ts-expect-error
 				err.status = 400
 			}
 
