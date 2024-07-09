@@ -1,4 +1,4 @@
-import { createServer, OutgoingMessage } from 'node:http'
+import { createServer, type OutgoingMessage } from 'node:http'
 
 import type * as Types from './types'
 import Router from './router'
