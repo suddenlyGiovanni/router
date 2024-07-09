@@ -46,7 +46,7 @@
 	},
 	"scripts": {
 		"lint": "eslint .",
-		"test:unit": "node --import=tsx --inspect --test **/*.test.ts",
+		"test:unit": "node --import=tsx --inspect --test src/**/*.test.ts",
 		"test:unit:watch": "pnpm run test:unit --watch",
 		"test": "mocha --reporter spec --bail --check-leaks test/",
 		"test-ci": "nyc --reporter=lcov --reporter=text npm test",
