@@ -206,23 +206,23 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private static restore<Obj extends object, Args extends Array<keyof Obj>>(
-		fn: Function,
-		obj: Obj,
-		...args: Args
-	) {
-		let props: unknown[] = new Array(args.length)
-		let vals: unknown[] = new Array(args.length)
+	protected static restore<
+		Obj extends object,
+		ObjKeysToRestore extends Array<keyof Obj>,
+		Fn extends Function,
+	>(fn: Fn, obj: Obj, ...objKeysToRestore: ObjKeysToRestore) {
+		let props: ObjKeysToRestore = new Array(objKeysToRestore.length) as ObjKeysToRestore
+		let vals = new Array(objKeysToRestore.length)
 
 		for (let i = 0; i < props.length; i++) {
-			props[i] = args[i]
-			vals[i] = obj[props[i]]
+			props[i] = objKeysToRestore[i]!
+			vals[i] = obj[props[i]!]
 		}
 
-		return function () {
+		return function <This>(this: This) {
 			// restore vals
 			for (let i = 0; i < props.length; i++) {
-				obj[props[i]] = vals[i]
+				obj[props[i]!] = vals[i]
 			}
 
 			return fn.apply(this, arguments)
@@ -463,7 +463,7 @@ export default class Router implements Types.Router {
 		// manage inter-router variables
 		let parentParams: Record<string, string> = req.params
 		let parentUrl = req?.baseUrl || ''
-		var done = Router.restore(callback, req, 'baseUrl', 'next', 'params')
+		let done: () => unknown = Router.restore(callback, req, 'baseUrl', 'next', 'params')
 
 		// setup next layer
 		req.next = next
