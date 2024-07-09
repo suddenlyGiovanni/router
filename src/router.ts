@@ -1,10 +1,8 @@
-import { type OutgoingMessage } from 'node:http'
-
+import type * as http from 'node:http'
 import type * as Types from './types'
 
 import d from 'debug'
 import parseUrl from 'parseurl'
-// import {methods} from './methods'
 import mixin from 'utils-merge'
 import { œflatten as flatten } from 'array-flatten'
 
@@ -87,7 +85,7 @@ export default class Router implements Types.Router {
 	 * @private
 	 */
 	private static generateOptionsResponder(
-		res: OutgoingMessage,
+		res: Types.OutgoingMessage,
 		methods: Uppercase<Types.HttpMethods>[],
 	) {
 		return function onDone(fn: Types.NextFunction, err?: any): void {
@@ -105,7 +103,7 @@ export default class Router implements Types.Router {
 	 * @param {IncomingMessage} req
 	 * @private
 	 */
-	private static getPathname(req) {
+	private static getPathname(req: http.IncomingMessage) {
 		try {
 			return parseUrl(req).pathname
 		} catch (err) {
@@ -437,7 +435,11 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private handle(req: Types.IncomingRequest, res: OutgoingMessage, callback: Types.NextFunction) {
+	private handle(
+		req: Types.IncomingRequest,
+		res: Types.OutgoingMessage,
+		callback: Types.NextFunction,
+	) {
 		if (!callback) {
 			throw new TypeError('argument callback is required')
 		}
