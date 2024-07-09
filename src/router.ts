@@ -1,5 +1,4 @@
 import { type OutgoingMessage } from 'node:http'
-import { RequestParamHandler } from './types'
 
 import type * as Types from './types'
 
@@ -87,8 +86,11 @@ export default class Router implements Types.Router {
 	 * @param {array} methods
 	 * @private
 	 */
-	private static generateOptionsResponder(res: OutgoingMessage, methods: string[]) {
-		return function onDone(fn, err): void {
+	private static generateOptionsResponder(
+		res: OutgoingMessage,
+		methods: Uppercase<Types.HttpMethods>[],
+	) {
+		return function onDone(fn: Types.NextFunction, err?: any): void {
 			if (err || methods.length === 0) {
 				return fn(err)
 			}
@@ -209,8 +211,8 @@ export default class Router implements Types.Router {
 		obj: Obj,
 		...args: Args
 	) {
-		let props = new Array(args.length)
-		let vals = new Array(args.length)
+		let props: unknown[] = new Array(args.length)
+		let vals: unknown[] = new Array(args.length)
 
 		for (let i = 0; i < props.length; i++) {
 			props[i] = args[i]
@@ -232,16 +234,19 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private static sendOptionsResponse(res: OutgoingMessage, methods) {
-		var options = Object.create(null)
-
+	private static sendOptionsResponse(
+		res: Types.OutgoingMessage,
+		methods: Uppercase<Types.HttpMethods>[],
+	) {
+		// TODO: this could be re-written with a reduce and a Map!
+		const options: Record<Uppercase<Types.HttpMethods>, boolean> = Object.create(null)
 		// build unique method map
-		for (var i = 0; i < methods.length; i++) {
-			options[methods[i]] = true
-		}
+		methods.forEach((m) => {
+			options[m] = true
+		})
 
-		// construct the allow list
-		var allow = Object.keys(options).sort().join(', ')
+		// construct the allow list: "GET, POST, HEAD"
+		const allow: string = Object.keys(options).sort().join(', ')
 
 		// send response
 		res.setHeader('Allow', allow)
@@ -256,10 +261,14 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private static trySendOptionsResponse(res, methods, next): void {
+	private static trySendOptionsResponse(
+		res: Types.OutgoingMessage,
+		methods: Uppercase<Types.HttpMethods>[],
+		next: Types.NextFunction,
+	): void {
 		try {
 			Router.sendOptionsResponse(res, methods)
-		} catch (err) {
+		} catch (err: unknown) {
 			next(err)
 		}
 	}
@@ -351,12 +360,24 @@ export default class Router implements Types.Router {
 		return route
 	}
 
+	/**
+	 * Use the given middleware function, with optional path, defaulting to "/".
+	 *
+	 * Use (like `.all`) will run for any http METHOD, but it will not add
+	 * handlers for those methods so OPTIONS requests will not consider `.use`
+	 * functions even if they could respond.
+	 *
+	 * The other difference is that _route_ path is stripped and not visible
+	 * to the handler function. The main effect of this feature is that mounted
+	 * handlers can operate without any code changes regardless of the "prefix"
+	 * pathname.
+	 *
+	 * @public
+	 */
 	public use(path: Types.PathParams, ...handlers: Types.RequestHandlerParams[]): Router
-
 	public use(...handlers: Types.RouteHandler[]): Router
-
 	public use(...handlers: Types.RequestHandlerParams[]): Router
-
+	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
 	public use(handler: unknown): Router {
 		let offset: number = 0
 		let path: string = '/'
@@ -412,22 +433,6 @@ export default class Router implements Types.Router {
 	}
 
 	/**
-	 * Use the given middleware function, with optional path, defaulting to "/".
-	 *
-	 * Use (like `.all`) will run for any http METHOD, but it will not add
-	 * handlers for those methods so OPTIONS requests will not consider `.use`
-	 * functions even if they could respond.
-	 *
-	 * The other difference is that _route_ path is stripped and not visible
-	 * to the handler function. The main effect of this feature is that mounted
-	 * handlers can operate without any code changes regardless of the "prefix"
-	 * pathname.
-	 *
-	 * @public
-	 */
-	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
-
-	/**
 	 * Dispatch a req, res into the router.
 	 *
 	 * @private
@@ -440,7 +445,7 @@ export default class Router implements Types.Router {
 		debug('dispatching %s %s', req.method, req.url)
 
 		let idx: number = 0
-		let methods
+		let methods: Uppercase<Types.HttpMethods>[]
 		var protohost = Router.getProtohost(req.url) || ''
 		let removed: string = ''
 		let self = this

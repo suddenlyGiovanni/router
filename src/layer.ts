@@ -14,10 +14,10 @@ const debug = _debug('router:layer')
 
 export class Layer {
 	public method?: undefined | Types.HttpMethods
-	public route?: Route
+	public route?: undefined | Route
 	private handle: Types.RouteHandler | Types.ErrorRequestHandler
 	public readonly name: string = '<anonymous>'
-	private params: undefined | Record<string, string> = undefined
+	public params: undefined | Record<string, string> = undefined
 	public path: undefined | Types.PathParams = undefined
 	private regexp: RegExp & {
 		keys?: string[]
