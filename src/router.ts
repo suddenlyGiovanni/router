@@ -1,4 +1,5 @@
 import { type OutgoingMessage } from 'node:http'
+import { RequestParamHandler } from './types'
 
 import type * as Types from './types'
 
@@ -40,6 +41,33 @@ interface RouterOptions {
  * @public
  */
 export default class Router implements Types.Router {
+	public checkout: Types.RouterMatcher<Router> = Router.makeMethodHandler('checkout')
+	public connect: Types.RouterMatcher<Router> = Router.makeMethodHandler('connect')
+	public copy: Types.RouterMatcher<Router> = Router.makeMethodHandler('copy')
+	public delete: Types.RouterMatcher<Router> = Router.makeMethodHandler('delete')
+	public get: Types.RouterMatcher<Router> = Router.makeMethodHandler('get')
+	public head: Types.RouterMatcher<Router> = Router.makeMethodHandler('head')
+	public lock: Types.RouterMatcher<Router> = Router.makeMethodHandler('lock')
+	public ['m-search']: Types.RouterMatcher<Router> = Router.makeMethodHandler('m-search')
+	public merge: Types.RouterMatcher<Router> = Router.makeMethodHandler('merge')
+	public mkactivity: Types.RouterMatcher<Router> = Router.makeMethodHandler('mkactivity')
+	public mkcol: Types.RouterMatcher<Router> = Router.makeMethodHandler('mkcol')
+	public move: Types.RouterMatcher<Router> = Router.makeMethodHandler('move')
+	public notify: Types.RouterMatcher<Router> = Router.makeMethodHandler('notify')
+	public options: Types.RouterMatcher<Router> = Router.makeMethodHandler('options')
+	public patch: Types.RouterMatcher<Router> = Router.makeMethodHandler('patch')
+	public post: Types.RouterMatcher<Router> = Router.makeMethodHandler('post')
+	public propfind: Types.RouterMatcher<Router> = Router.makeMethodHandler('propfind')
+	public proppatch: Types.RouterMatcher<Router> = Router.makeMethodHandler('proppatch')
+	public purge: Types.RouterMatcher<Router> = Router.makeMethodHandler('purge')
+	public put: Types.RouterMatcher<Router> = Router.makeMethodHandler('put')
+	public report: Types.RouterMatcher<Router> = Router.makeMethodHandler('report')
+	public search: Types.RouterMatcher<Router> = Router.makeMethodHandler('search')
+	public subscribe: Types.RouterMatcher<Router> = Router.makeMethodHandler('subscribe')
+	public trace: Types.RouterMatcher<Router> = Router.makeMethodHandler('trace')
+	public unlock: Types.RouterMatcher<Router> = Router.makeMethodHandler('unlock')
+	public unsubscribe: Types.RouterMatcher<Router> = Router.makeMethodHandler('unsubscribe')
+
 	private caseSensitive: undefined | boolean = undefined
 	private mergeParams: undefined | boolean = undefined
 	private params: {} = {}
@@ -100,6 +128,14 @@ export default class Router implements Types.Router {
 		var fqdnIndex = url.substring(0, pathLength).indexOf('://')
 
 		return fqdnIndex !== -1 ? url.substring(0, url.indexOf('/', 3 + fqdnIndex)) : undefined
+	}
+
+	private static makeMethodHandler(method: Types.HttpMethods): Types.RouterMatcher<Router> {
+		return function routerMatcher(this: Router, path, ...handlers): Router {
+			const route: Route = this.route(path)
+			route[method].apply(route, handlers)
+			return this
+		}
 	}
 
 	/**
@@ -244,7 +280,15 @@ export default class Router implements Types.Router {
 		}
 	}
 
-	param(name: string, fn: Function): this {
+	public all(path: Types.PathParams, ...handlers: Types.RouterHandler<Router>[]): Router {
+		const route: Route = this.route(path)
+		route['all'].apply(route, handlers)
+		return this
+	}
+
+	public param(name: string, handler: Types.RequestParamHandler): Router
+	public param(callback: (name: string, matcher: RegExp) => Types.RequestParamHandler): Router
+	public param(name: string, fn: Function): Router {
 		if (!name) {
 			throw new TypeError('argument name is required')
 		}
@@ -307,24 +351,12 @@ export default class Router implements Types.Router {
 		return route
 	}
 
-	/**
-	 * Use the given middleware function, with optional path, defaulting to "/".
-	 *
-	 * Use (like `.all`) will run for any http METHOD, but it will not add
-	 * handlers for those methods so OPTIONS requests will not consider `.use`
-	 * functions even if they could respond.
-	 *
-	 * The other difference is that _route_ path is stripped and not visible
-	 * to the handler function. The main effect of this feature is that mounted
-	 * handlers can operate without any code changes regardless of the "prefix"
-	 * pathname.
-	 *
-	 * @public
-	 */
-	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
 	public use(path: Types.PathParams, ...handlers: Types.RequestHandlerParams[]): Router
+
 	public use(...handlers: Types.RouteHandler[]): Router
+
 	public use(...handlers: Types.RequestHandlerParams[]): Router
+
 	public use(handler: unknown): Router {
 		let offset: number = 0
 		let path: string = '/'
@@ -378,6 +410,22 @@ export default class Router implements Types.Router {
 
 		return this
 	}
+
+	/**
+	 * Use the given middleware function, with optional path, defaulting to "/".
+	 *
+	 * Use (like `.all`) will run for any http METHOD, but it will not add
+	 * handlers for those methods so OPTIONS requests will not consider `.use`
+	 * functions even if they could respond.
+	 *
+	 * The other difference is that _route_ path is stripped and not visible
+	 * to the handler function. The main effect of this feature is that mounted
+	 * handlers can operate without any code changes regardless of the "prefix"
+	 * pathname.
+	 *
+	 * @public
+	 */
+	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
 
 	/**
 	 * Dispatch a req, res into the router.
@@ -671,22 +719,6 @@ export default class Router implements Types.Router {
 
 		param()
 	}
-
-	private static makeMethodHandler(method: Types.HttpMethods): Types.RouterMatcher<Router> {
-		return function routerMatcher(this: Router, path, ...handlers): Router {
-			let route = this.route(path)
-			route[method].apply(route, handlers)
-			return this
-		}
-	}
-
-	public all(path: Types.PathParams, ...handlers: Types.RouterHandler<Router>[]): Router {
-		let route = this.route(path)
-		route['all'].apply(route, handlers)
-		return this
-	}
-
-	public get: Types.RouterMatcher<Router> = Router.makeMethodHandler('get')
 }
 
 // create Router#VERB functions
