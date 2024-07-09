@@ -101,7 +101,7 @@ export class Route implements Types.Route {
 	 * @private
 	 */
 	public _methods(): Uppercase<Types.HttpMethods>[] {
-		let methods = Object.keys(this.methods) as Types.HttpMethods[]
+		let methods: Types.HttpMethods[] = Object.keys(this.methods) as Types.HttpMethods[]
 
 		// append automatic head
 		if (this.methods.get && !this.methods.head) {
