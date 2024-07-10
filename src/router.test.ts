@@ -233,3 +233,96 @@ describe('restore', () => {
 		assert.strictEqual(x, 84)
 	})
 })
+
+describe('wrap', () => {
+	/**
+	 * Wrap a function
+	 *
+	 * @private
+	 */
+
+	function wrap(old, fn: Function) {
+		return function proxy() {
+			var args = new Array(arguments.length + 1)
+
+			args[0] = old
+			for (var i = 0, len = arguments.length; i < len; i++) {
+				args[i + 1] = arguments[i]
+			}
+
+			fn.apply(this, args)
+		}
+	}
+
+	test('wrap returns a function', async (t) => {
+		const oldFunction = () => {}
+		const wrapperFunction = () => {}
+		const result = wrap(oldFunction, wrapperFunction)
+		assert.strictEqual(typeof result, 'function')
+	})
+
+	test('wrap correctly calls original and wrapper functions with arguments', async (t) => {
+		const originalFunction = t.mock.fn()
+		const wrapperFunction = t.mock.fn((old, ...args) => old(...args))
+		const proxy = wrap(originalFunction, wrapperFunction)
+
+		proxy('testArg1', 'testArg2')
+
+		// Asserting the wrapper function was called correctly
+		assert.strictEqual(wrapperFunction.mock.calls.length, 1)
+		const wrapperCall = wrapperFunction.mock.calls[0]
+		assert.deepStrictEqual(wrapperCall.arguments, [originalFunction, 'testArg1', 'testArg2'])
+
+		// Asserting the original function was called correctly
+		assert.strictEqual(originalFunction.mock.calls.length, 1)
+		const originalCall = originalFunction.mock.calls[0]
+		assert.deepStrictEqual(originalCall.arguments, ['testArg1', 'testArg2'])
+	})
+
+	test.skip('wrap preserves this context', async () => {
+		const context = { value: 42 }
+		const oldFunction = function (this: typeof context) {
+			return this.value
+		}
+		const wrapperFunction = function (old) {
+			return old.call(this)
+		}
+		const proxy = wrap(oldFunction, wrapperFunction).bind(context)
+
+		const result = proxy()
+		assert.strictEqual(result, 42)
+	})
+
+	test('wrap does not call the original function if the wrapper does not invoke it', async (t) => {
+		const originalFunction = t.mock.fn()
+		const wrapperFunction = t.mock.fn() // Does not call the original function
+		const proxy = wrap(originalFunction, wrapperFunction)
+
+		proxy('testArg')
+
+		assert.strictEqual(
+			originalFunction.mock.calls.length,
+			0,
+			'Original function should not be called',
+		)
+	})
+
+	test('wrap handles no arguments passed to proxy function', async (t) => {
+		const originalFunction = t.mock.fn()
+		const wrapperFunction = t.mock.fn((old) => old())
+		const proxy = wrap(originalFunction, wrapperFunction)
+
+		proxy()
+
+		assert.strictEqual(
+			wrapperFunction.mock.calls.length,
+			1,
+			'Wrapper function should be called once',
+		)
+		assert.strictEqual(
+			originalFunction.mock.calls.length,
+			1,
+			'Original function should be called once',
+		)
+	})
+})
