@@ -181,15 +181,13 @@ describe('restore', () => {
 					acc[key] = obj[key]
 					return acc
 				},
-				{} as Partial<Obj>,
+				{} as Obj[Keys[number]],
 			)
 
 			return (...args) => {
-				// Restore original values
-				// biome-ignore lint/complexity/noForEach: <explanation>
-				keys.forEach((key) => {
+				for (const key of keys) {
 					obj[key] = originalValues[key]
-				})
+				}
 				return fn(...args)
 			}
 		}
