@@ -7,7 +7,6 @@ describe('restore', () => {
 		test(`restore ${version.toString()} function behavior`, () => {
 			// Initial object
 			const obj = { a: 1, b: 2, c: 42 }
-
 			// Assert initial object properties
 			assert.strictEqual(obj.a, 1, 'Initial value of a should be 1')
 			assert.strictEqual(obj.b, 2, 'Initial value of b should be 2')
@@ -265,18 +264,27 @@ describe('wrap', () => {
 				assert.deepStrictEqual(originalCall.arguments, ['testArg1', 'testArg2'])
 			})
 
-			test.skip('wrap preserves this context', async () => {
+			test.skip('wrap preserves this context', () => {
+				// Define a context object with a property to test `this` binding
 				const context = { value: 42 }
-				const oldFunction = function (this: typeof context) {
+
+				// Function that relies on `this` context
+				function oldFunction(this: typeof context) {
 					return this.value
 				}
-				const wrapperFunction = function (old) {
-					return old.call(this)
+
+				// Wrapper function that calls the original function
+				function wrapperFunction<Old extends Function>(this: typeof context, old: Old) {
+					return old()
 				}
+
+				// Use the wrap function to wrap the original function with the wrapper
+
 				const proxy = wrapStrategy(oldFunction, wrapperFunction).bind(context)
 
+				// Call the wrapped function and assert that `this` is correctly bound
 				const result = proxy()
-				assert.strictEqual(result, 42)
+				assert.strictEqual(result, 42, 'The wrapped function should preserve the this context')
 			})
 
 			test('wrap does not call the original function if the wrapper does not invoke it', (t) => {
