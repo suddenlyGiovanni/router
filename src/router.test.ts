@@ -234,8 +234,8 @@ describe('restore', () => {
 })
 
 describe('wrap', () => {
-	type AnyFunction = (...args: any[]) => any
 	type Wrap = <
+		AnyFunction extends (...args: any[]) => any,
 		Old extends AnyFunction,
 		Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
 	>(
