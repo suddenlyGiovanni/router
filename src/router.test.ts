@@ -235,7 +235,6 @@ describe('restore', () => {
 
 describe('wrap', () => {
 	type AnyFunction = (...args: any[]) => any
-
 	type Wrap = <
 		Old extends AnyFunction,
 		Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
@@ -277,22 +276,22 @@ describe('wrap', () => {
 				const context = { value: 42 }
 
 				// Function that relies on `this` context
-				function oldFunction(this: typeof context) {
-					return this.value
+				function oldFunction(this: { value: number }, num: number): number {
+					return this.value + num
 				}
 
 				// Wrapper function that calls the original function
-				function wrapperFunction<Old extends Function>(this: typeof context, old: Old) {
+				function wrapperFunction(old) {
 					return old()
 				}
 
 				// Use the wrap function to wrap the original function with the wrapper
 
-				const proxy = wrapStrategy(oldFunction, wrapperFunction).bind(context)
+				const proxy = wrapStrategy(oldFunction, (old, _) => old.call(context, _))
 
 				// Call the wrapped function and assert that `this` is correctly bound
-				const result = proxy()
-				assert.strictEqual(result, 42, 'The wrapped function should preserve the this context')
+				const result = proxy(42)
+				assert.strictEqual(result, 84, 'The wrapped function should preserve the this context')
 			})
 
 			test('wrap does not call the original function if the wrapper does not invoke it', (t) => {
@@ -370,7 +369,7 @@ describe('wrap', () => {
 		}
 	})
 
-	testWrap(5, (old, fn) => (...args) => {
+	testWrap(6, (old, fn) => (...args) => {
 		fn(old, ...args)
 	})
 })
