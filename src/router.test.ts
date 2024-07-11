@@ -236,20 +236,26 @@ describe('restore', () => {
 describe('wrap', () => {
 	type Wrap = <
 		AnyFunction extends (...args: any[]) => any,
-		Old extends AnyFunction,
-		Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
+		F extends AnyFunction,
+		G extends (...args: [F, ...Parameters<F>]) => ReturnType<F>,
 	>(
-		old: Old,
-		fn: Fn,
-	) => (...args: Parameters<Old>) => void
+		f: F,
+		g: G,
+	) => (...fArgs: Parameters<F>) => ReturnType<F>
 
 	function testWrap(version: number, wrapStrategy: Wrap) {
 		describe(`wrap ${version.toString()} function behavior`, () => {
 			test('wrap returns a function', (t) => {
-				const oldFunction = () => {}
-				const wrapperFunction = () => {}
-				const result = wrapStrategy(oldFunction, wrapperFunction)
-				assert.strictEqual(typeof result, 'function')
+				const proxy = wrapStrategy(
+					(number: number) => number,
+					(f, number) => {
+						console.log('before')
+						const result = f(number)
+						console.log('after')
+						return result
+					},
+				)
+				assert.strictEqual(typeof proxy, 'function')
 			})
 
 			test('wrap correctly calls original and wrapper functions with arguments', (t) => {
@@ -263,12 +269,12 @@ describe('wrap', () => {
 				// Asserting the wrapper function was called correctly
 				assert.strictEqual(wrapperFunction.mock.calls.length, 1)
 				const wrapperCall = wrapperFunction.mock.calls[0]
-				assert.deepStrictEqual(wrapperCall.arguments, [originalFunction, 'testArg1', 'testArg2'])
+				assert.deepStrictEqual(wrapperCall?.arguments, [originalFunction, 'testArg1', 'testArg2'])
 
 				// Asserting the original function was called correctly
 				assert.strictEqual(originalFunction.mock.calls.length, 1)
 				const originalCall = originalFunction.mock.calls[0]
-				assert.deepStrictEqual(originalCall.arguments, ['testArg1', 'testArg2'])
+				assert.deepStrictEqual(originalCall?.arguments, ['testArg1', 'testArg2'])
 			})
 
 			test.skip('wrap preserves this context', () => {
@@ -336,44 +342,47 @@ describe('wrap', () => {
 		})
 	}
 
-	testWrap(1, function wrap(old, fn) {
+	testWrap(1, function wrap(f, g) {
 		return function proxy() {
 			var args = new Array(arguments.length + 1)
 
-			args[0] = old
+			args[0] = f
 			for (var i = 0, len = arguments.length; i < len; i++) {
 				args[i + 1] = arguments[i]
 			}
 
-			fn.apply(this, args)
+			return g.apply(this, args)
 		}
 	})
 
-	testWrap(2, function wrap(old, fn) {
-		return function proxy(this: any, ...args) {
-			fn.apply(this, [old, ...args])
+	testWrap(2, function wrap(f, g) {
+		return function proxy(this: any, ...fArgs) {
+			return g.apply(this, [f, ...fArgs])
 		}
 	})
 
-	testWrap(3, function wrap(old, fn) {
-		return function proxy(this: any, ...args) {
-			fn.call(this, old, ...args)
+	testWrap(3, function wrap(f, g) {
+		return function proxy(this: any, ...fArgs) {
+			return g.call(this, f, ...fArgs)
 		}
 	})
 
-	testWrap(4, function wrap(old, fn) {
-		return function proxy(this: any, ...args) {
-			fn(old, ...args)
+	testWrap(4, function wrap(f, g) {
+		return function proxy(this: any, ...fArgs) {
+			return g(f, ...fArgs)
 		}
 	})
 
-	testWrap(5, function wrap(old, fn) {
-		return (...args) => {
-			fn(old, ...args)
+	testWrap(5, function wrap(f, g) {
+		return (...fArgs) => {
+			return g(f, ...fArgs)
 		}
 	})
 
-	testWrap(6, (old, fn) => (...args) => {
-		fn(old, ...args)
-	})
+	testWrap(
+		6,
+		(f, g) =>
+			(...fArgs) =>
+				g(f, ...fArgs),
+	)
 })
