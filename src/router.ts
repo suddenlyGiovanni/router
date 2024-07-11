@@ -277,7 +277,11 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private static wrap(old, fn) {
+	private static wrap<
+		AnyFunction extends (...args: any[]) => any,
+		Old extends AnyFunction,
+		Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
+	>(old: Old, fn: Fn): (...args: Parameters<Old>) => void {
 		return function proxy(): void {
 			var args = new Array(arguments.length + 1)
 
