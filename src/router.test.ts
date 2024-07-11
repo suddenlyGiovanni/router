@@ -357,4 +357,16 @@ describe('wrap', () => {
 			fn.call(this, old, ...args)
 		}
 	})
+
+	testWrap(4, function wrap(old, fn) {
+		return function proxy(this: any, ...args) {
+			fn(old, ...args)
+		}
+	})
+
+	testWrap(5, function wrap(old, fn) {
+		return (...args) => {
+			fn(old, ...args)
+		}
+	})
 })
