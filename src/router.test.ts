@@ -345,4 +345,10 @@ describe('wrap', () => {
 			fn.apply(this, args)
 		}
 	})
+
+	testWrap(2, function wrap(old, fn) {
+		return function proxy(this: any, ...args) {
+			fn.apply(this, [old, ...args])
+		}
+	})
 })
