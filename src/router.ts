@@ -147,10 +147,11 @@ export default class Router implements Types.Router {
 	 * @param {string} path
 	 * @private
 	 */
-	private static matchLayer(layer: Layer, path: string) {
+	private static matchLayer(layer: Layer, path: string): boolean {
 		try {
 			return layer.match(path)
-		} catch (err) {
+		} catch (err: unknown) {
+			// @ts-expect-error FIXME: most likely should not return an error in the catch clause right?
 			return err
 		}
 	}
@@ -476,7 +477,7 @@ export default class Router implements Types.Router {
 		next()
 
 		function next(err?: any): void {
-			let layerError = err === 'route' ? null : err
+			let layerError: null | any = err === 'route' ? null : err
 
 			// remove added slash
 			if (slashAdded) {
@@ -517,8 +518,8 @@ export default class Router implements Types.Router {
 
 			// find next matching layer
 			let layer: Layer
-			var match
-			var route: Route
+			let match: boolean
+			let route: Route
 
 			while (match !== true && idx < stack.length) {
 				layer = stack[idx++]
@@ -545,8 +546,8 @@ export default class Router implements Types.Router {
 					continue
 				}
 
-				var method = req?.method
-				var has_method: boolean = route._handles_method(method)
+				let method = req?.method
+				let has_method: boolean = route._handles_method(method)
 
 				// build up automatic options response
 				if (!has_method && method === 'OPTIONS' && methods) {
@@ -574,10 +575,10 @@ export default class Router implements Types.Router {
 			req.params = self.mergeParams
 				? Router.mergeParams(layer.params, parentParams) //
 				: layer.params
-			var layerPath = layer.path
+			const layerPath = layer?.path
 
 			// this should be done for the layer
-			self.process_params(layer, paramcalled, req, res, function (err) {
+			self.process_params(layer, paramcalled, req, res, (err) => {
 				if (err) {
 					next(layerError || err)
 				} else if (route) {
@@ -590,7 +591,12 @@ export default class Router implements Types.Router {
 			})
 		}
 
-		function trim_prefix(layer: Layer, layerError, layerPath, path): void {
+		function trim_prefix(
+			layer: Layer,
+			layerError: unknown,
+			layerPath: Types.PathParams,
+			path: string,
+		): void {
 			if (layerPath.length !== 0) {
 				// Validate path is a prefix match
 				if (layerPath !== path.substring(0, layerPath.length)) {
@@ -599,7 +605,7 @@ export default class Router implements Types.Router {
 				}
 
 				// Validate path breaks on a path separator
-				var c = path[layerPath.length]
+				const c = path[layerPath.length]
 				if (c && c !== '/') {
 					next(layerError)
 					return
@@ -638,7 +644,13 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private process_params(layer, called, req, res, done) {
+	private process_params(
+		layer: Layer,
+		called: object,
+		req: Types.IncomingRequest,
+		res: Types.OutgoingMessage,
+		done: (err?: any) => void,
+	) {
 		var params = this.params
 
 		// captured parameters from the layer, keys and values
