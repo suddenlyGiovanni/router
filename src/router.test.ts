@@ -369,4 +369,8 @@ describe('wrap', () => {
 			fn(old, ...args)
 		}
 	})
+
+	testWrap(5, (old, fn) => (...args) => {
+		fn(old, ...args)
+	})
 })
