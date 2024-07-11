@@ -296,8 +296,11 @@ describe('wrap', () => {
 			})
 
 			test('wrap does not call the original function if the wrapper does not invoke it', (t) => {
-				const originalFunction = t.mock.fn()
-				const wrapperFunction = t.mock.fn() // Does not call the original function
+				type Old = (arg: string) => void
+
+				const originalFunction = t.mock.fn<Old>()
+				const wrapperFunction = t.mock.fn<(...arg: [Old, ...Parameters<Old>]) => void>() // Does not call the original
+				// function
 				const proxy = wrapStrategy(originalFunction, wrapperFunction)
 
 				proxy('testArg')
