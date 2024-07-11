@@ -281,16 +281,20 @@ describe('wrap', () => {
 				}
 
 				// Wrapper function that calls the original function
-				function wrapperFunction(old) {
-					return old()
+				function wrapperFunction(
+					this: { value: number },
+					old: typeof oldFunction,
+					num: number,
+				): number {
+					return old.call(this, num)
 				}
 
 				// Use the wrap function to wrap the original function with the wrapper
 
-				const proxy = wrapStrategy(oldFunction, (old, _) => old.call(context, _))
+				const proxy = wrapStrategy(oldFunction, wrapperFunction)
 
 				// Call the wrapped function and assert that `this` is correctly bound
-				const result = proxy(42)
+				const result = proxy.call(context, 42)
 				assert.strictEqual(result, 84, 'The wrapped function should preserve the this context')
 			})
 
