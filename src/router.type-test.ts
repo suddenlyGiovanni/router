@@ -1,7 +1,7 @@
-import { createServer, type OutgoingMessage } from 'node:http'
+import { type OutgoingMessage, createServer } from 'node:http'
 
-import type * as Types from './types'
 import Router from './router'
+import type * as Types from './types'
 
 const options: Types.RouterOptions = {
 	strict: false,
@@ -70,9 +70,9 @@ router
 	})
 
 // valid for router from createServer
-createServer(function (req, res) {
-	router(req, res, (err) => {})
-	router.handle(req, res, (err) => {})
+createServer((req, res) => {
+	// router(req, res, (err) => {})
+	router.handle(req, res, (_err) => {})
 })
 
 // Type test helper methods
