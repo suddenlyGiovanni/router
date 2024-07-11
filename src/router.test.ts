@@ -233,11 +233,18 @@ describe('restore', () => {
 	})
 })
 
+type AnyFunction = (...args: any[]) => any
+
+type Wrap = <
+	Old extends AnyFunction,
+	Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
+>(
+	old: Old,
+	fn: Fn,
+) => (...args: Parameters<Old>) => void
+
 describe('wrap', () => {
-	function testWrap<WrapStrategy extends (old: Function, fn: Function) => Function>(
-		version: number,
-		wrapStrategy: WrapStrategy,
-	) {
+	function testWrap(version: number, wrapStrategy: Wrap) {
 		describe(`wrap ${version.toString()} function behavior`, () => {
 			test('wrap returns a function', (t) => {
 				const oldFunction = () => {}
@@ -322,8 +329,8 @@ describe('wrap', () => {
 		})
 	}
 
-	testWrap(1, function wrap(old, fn: Function): Function {
-		return function proxy(): void {
+	testWrap(1, function wrap(old, fn) {
+		return function proxy() {
 			var args = new Array(arguments.length + 1)
 
 			args[0] = old
