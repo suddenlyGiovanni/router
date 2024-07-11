@@ -89,7 +89,8 @@ export default class Router implements Types.Router {
 	): (fn: Types.NextFunction, err?: any) => void {
 		return function onDone(fn: Types.NextFunction, err?: any): void {
 			if (err || methods.length === 0) {
-				return fn(err)
+				fn(err)
+				return
 			}
 
 			Router.trySendOptionsResponse(res, methods, fn)
@@ -279,19 +280,10 @@ export default class Router implements Types.Router {
 	 */
 	private static wrap<
 		AnyFunction extends (...args: any[]) => any,
-		Old extends AnyFunction,
-		Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
-	>(old: Old, fn: Fn): (...args: Parameters<Old>) => void {
-		return function proxy(): void {
-			var args = new Array(arguments.length + 1)
-
-			args[0] = old
-			for (var i = 0, len = arguments.length; i < len; i++) {
-				args[i + 1] = arguments[i]
-			}
-
-			fn.apply(this, args)
-		}
+		F extends AnyFunction,
+		G extends (...args: [F, ...Parameters<F>]) => ReturnType<F>,
+	>(f: F, g: G): (...fArgs: Parameters<F>) => ReturnType<F> {
+		return (...fArgs) => g(f, ...fArgs)
 	}
 
 	public all(path: Types.PathParams, ...handlers: Types.RouterHandler<Router>[]): Router {
@@ -444,7 +436,7 @@ export default class Router implements Types.Router {
 		req: Types.IncomingRequest,
 		res: Types.OutgoingMessage,
 		callback: Types.NextFunction,
-	) {
+	): void {
 		if (!callback) {
 			throw new TypeError('argument callback is required')
 		}
@@ -453,7 +445,7 @@ export default class Router implements Types.Router {
 
 		let idx: number = 0
 		let methods: Uppercase<Types.HttpMethods>[]
-		var protohost = Router.getProtohost(req.url) || ''
+		let protohost: string = Router.getProtohost(req.url) || ''
 		let removed: string = ''
 		let self = this
 		let slashAdded: boolean = false
@@ -465,8 +457,8 @@ export default class Router implements Types.Router {
 
 		// manage inter-router variables
 		let parentParams: Record<string, string> = req.params
-		let parentUrl = req?.baseUrl || ''
-		let done = Router.restore(callback, req, 'baseUrl', 'next', 'params')
+		let parentUrl: string = req?.baseUrl || ''
+		let done: Types.NextFunction = Router.restore(callback, req, 'baseUrl', 'next', 'params')
 
 		// setup next layer
 		req.next = next
@@ -517,7 +509,7 @@ export default class Router implements Types.Router {
 			}
 
 			// get pathname of request
-			var path = Router.getPathname(req)
+			let path: undefined | null | string = Router.getPathname(req)
 
 			if (path == null) {
 				return done(layerError)
