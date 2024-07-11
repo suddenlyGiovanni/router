@@ -233,17 +233,17 @@ describe('restore', () => {
 	})
 })
 
-type AnyFunction = (...args: any[]) => any
-
-type Wrap = <
-	Old extends AnyFunction,
-	Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
->(
-	old: Old,
-	fn: Fn,
-) => (...args: Parameters<Old>) => void
-
 describe('wrap', () => {
+	type AnyFunction = (...args: any[]) => any
+
+	type Wrap = <
+		Old extends AnyFunction,
+		Fn extends (...args: [Old, ...Parameters<Old>]) => ReturnType<Old>,
+	>(
+		old: Old,
+		fn: Fn,
+	) => (...args: Parameters<Old>) => void
+
 	function testWrap(version: number, wrapStrategy: Wrap) {
 		describe(`wrap ${version.toString()} function behavior`, () => {
 			test('wrap returns a function', (t) => {
@@ -254,8 +254,9 @@ describe('wrap', () => {
 			})
 
 			test('wrap correctly calls original and wrapper functions with arguments', (t) => {
-				const originalFunction = t.mock.fn()
-				const wrapperFunction = t.mock.fn((old, ...args) => old(...args))
+				type Old = (arg1: string, arg2: string) => void
+				const originalFunction = t.mock.fn<Old>()
+				const wrapperFunction = t.mock.fn((old: Old, ...args: Parameters<Old>) => old(...args))
 				const proxy = wrapStrategy(originalFunction, wrapperFunction)
 
 				proxy('testArg1', 'testArg2')
