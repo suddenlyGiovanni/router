@@ -24,7 +24,7 @@ export class Layer {
 		fast_star?: boolean
 		fast_slash?: boolean
 	}
-	private keys: string[] = []
+	public keys: string[] = []
 
 	constructor(
 		path: Types.PathParams,

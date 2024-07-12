@@ -646,40 +646,43 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private process_params(
+	private process_params<Called extends Record<string, unknown>>(
 		layer: Layer,
-		called: object,
+		called: Called,
 		req: Types.IncomingRequest,
 		res: Types.OutgoingMessage,
 		done: (err?: any) => void,
-	) {
-		var params = this.params
+	): void {
+		const params = this.params
 
 		// captured parameters from the layer, keys and values
-		var keys = layer.keys
+		const keys = layer.keys
 
 		// fast track
 		if (!keys || keys.length === 0) {
-			return done()
+			done()
+			return
 		}
 
-		var i = 0
-		var name
-		var paramIndex = 0
-		var key
-		var paramVal
-		var paramCallbacks
-		var paramCalled
+		let i: number = 0
+		let name: undefined | string = undefined
+		let paramIndex: number = 0
+		let key: string | undefined = undefined
+		let paramVal
+		let paramCallbacks: unknown[]
+		let paramCalled: { error: unknown; value: unknown; match: unknown }
 
 		// process params in order
 		// param callbacks can be async
-		function param(err) {
+		function param(err?: unknown): void {
 			if (err) {
-				return done(err)
+				done(err)
+				return
 			}
 
 			if (i >= keys.length) {
-				return done()
+				done()
+				return
 			}
 
 			paramIndex = 0
@@ -690,7 +693,8 @@ export default class Router implements Types.Router {
 			paramCalled = called[name]
 
 			if (paramVal === undefined || !paramCallbacks) {
-				return param()
+				param()
+				return
 			}
 
 			// param previously called with same value or error occurred
@@ -702,7 +706,8 @@ export default class Router implements Types.Router {
 				req.params[name] = paramCalled.value
 
 				// next param
-				return param(paramCalled.error)
+				param(paramCalled.error)
+				return
 			}
 
 			called[name] = paramCalled = {
@@ -715,8 +720,8 @@ export default class Router implements Types.Router {
 		}
 
 		// single param callbacks
-		function paramCallback(err) {
-			var fn = paramCallbacks[paramIndex++]
+		function paramCallback(err?: unknown): void {
+			let fn = paramCallbacks[paramIndex++]
 
 			// store updated value
 			paramCalled.value = req.params[key.name]
@@ -728,11 +733,14 @@ export default class Router implements Types.Router {
 				return
 			}
 
-			if (!fn) return param()
+			if (!fn) {
+				param()
+				return
+			}
 
 			try {
 				fn(req, res, paramCallback, paramVal, key.name)
-			} catch (e) {
+			} catch (e: unknown) {
 				paramCallback(e)
 			}
 		}
