@@ -15,7 +15,7 @@ const debug = _debug('router:layer')
 export class Layer {
 	public method?: undefined | Types.HttpMethods
 	public route?: undefined | Route
-	private handle: Types.RouteHandler | Types.ErrorRequestHandler
+	private readonly handle: Types.RouteHandler | Types.ErrorRequestHandler
 	public readonly name: string = '<anonymous>'
 	public params: undefined | Record<string, string> = undefined
 	public path: undefined | Types.PathParams = undefined
@@ -36,7 +36,7 @@ export class Layer {
 		fn: Types.RouteHandler | Types.ErrorRequestHandler,
 	) {
 		debug('new %o', path)
-		let opts = options || {}
+		const opts = options || {}
 
 		this.handle = fn
 		this.name = fn.name
@@ -64,11 +64,12 @@ export class Layer {
 		res: Types.OutgoingMessage,
 		next: Types.NextFunction,
 	): void {
-		let fn = this.handle
+		const fn = this.handle
 
 		if (fn.length !== 4) {
 			// not a standard error handler
-			return next(error)
+			next(error)
+			return
 		}
 
 		try {
@@ -91,16 +92,17 @@ export class Layer {
 		res: Types.OutgoingMessage,
 		next: Types.NextFunction,
 	): void {
-		let fn = this.handle
+		const fn = this.handle
 
 		if (fn.length > 3) {
 			// not a standard request handler
-			return next()
+			next()
+			return
 		}
 
 		try {
 			;(fn as Types.RouteHandler)(req, res, next)
-		} catch (err) {
+		} catch (err: unknown) {
 			next(err)
 		}
 	}
