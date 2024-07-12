@@ -238,13 +238,13 @@ export default class Router implements Types.Router {
 	private static sendOptionsResponse(
 		res: Types.OutgoingMessage,
 		methods: Uppercase<Types.HttpMethods>[],
-	) {
+	): void {
 		// TODO: this could be re-written with a reduce and a Map!
 		const options: Record<Uppercase<Types.HttpMethods>, boolean> = Object.create(null)
 		// build unique method map
-		methods.forEach((m) => {
+		for (const m of methods) {
 			options[m] = true
-		})
+		}
 
 		// construct the allow list: "GET, POST, HEAD"
 		const allow: string = Object.keys(options).sort().join(', ')
@@ -446,19 +446,19 @@ export default class Router implements Types.Router {
 
 		let idx: number = 0
 		let methods: Uppercase<Types.HttpMethods>[]
-		let protohost: string = Router.getProtohost(req.url) || ''
+		const protohost: string = Router.getProtohost(req.url) || ''
 		let removed: string = ''
-		let self = this
+		const self = this
 		let slashAdded: boolean = false
 		let sync: number = 0
-		let paramcalled = {}
+		const paramcalled = {}
 
 		// middleware and routes
-		let stack: Layer[] = this.stack
+		const stack: Layer[] = this.stack
 
 		// manage inter-router variables
-		let parentParams: Record<string, string> = req.params
-		let parentUrl: string = req?.baseUrl || ''
+		const parentParams: Record<string, string> = req.params
+		const parentUrl: string = req?.baseUrl || ''
 		let done: Types.NextFunction = Router.restore(callback, req, 'baseUrl', 'next', 'params')
 
 		// setup next layer
@@ -506,7 +506,8 @@ export default class Router implements Types.Router {
 
 			// max sync stack
 			if (++sync > 100) {
-				return setImmediate(next, err)
+				setImmediate(next, err)
+				return
 			}
 
 			// get pathname of request
@@ -563,7 +564,8 @@ export default class Router implements Types.Router {
 
 			// no match
 			if (match !== true) {
-				return done(layerError)
+				done(layerError)
+				return
 			}
 
 			// store route for dispatch on change
