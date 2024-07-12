@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import pathToRegexp from 'path-to-regexp'
 
 import type { Route } from './route'
@@ -117,6 +118,7 @@ export class Layer {
 	 * @api private
 	 */
 	match(path: string): boolean {
+		assert(typeof path === 'string', 'path must be a string')
 		let match: null | RegExpExecArray = null
 
 		if (path != null) {
@@ -149,13 +151,13 @@ export class Layer {
 		this.path = match[0]
 
 		// iterate matches
-		let keys = this.keys
-		let params = this.params
+		const keys = this.keys
+		const params = this.params
 
 		for (let i = 1; i < match.length; i++) {
-			let key = keys[i - 1]
-			let prop = key.name
-			let val = this.decode_param(match[i])
+			const key: undefined | string = keys[i - 1]
+			const prop: string = key.name
+			const val: string = this.decode_param(match[i])
 
 			if (val !== undefined || !Object.prototype.hasOwnProperty.call(params, prop)) {
 				params[prop] = val
