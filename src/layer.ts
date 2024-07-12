@@ -29,14 +29,26 @@ export class Layer {
 	constructor(
 		path: Types.PathParams,
 		options: {
+			/**
+			 * Set this to `false` to only match the prefix of the URL.
+			 * @default {true} - if omitted
+			 */
 			end?: boolean
+			/**
+			 * Set this to `true` to make the trailing slash matter.
+			 * @default {false} - if omitted
+			 */
 			strict?: boolean
+			/**
+			 * Set this to `true` to make routes case sensitive
+			 * @default {false} - if omitted
+			 */
 			sensitive?: boolean
 		},
 		fn: Types.RouteHandler | Types.ErrorRequestHandler,
 	) {
 		debug('new %o', path)
-		const opts = options || {}
+		const opts = { end: true, sensitive: false, strict: false, ...options }
 
 		this.handle = fn
 		this.name = fn.name
@@ -51,11 +63,6 @@ export class Layer {
 
 	/**
 	 * Handle the error for the layer.
-	 *
-	 * @param {Error} error
-	 * @param {Request} req
-	 * @param {Response} res
-	 * @param {function} next
 	 * @api private
 	 */
 	handle_error(
@@ -81,10 +88,6 @@ export class Layer {
 
 	/**
 	 * Handle the request for the layer.
-	 *
-	 * @param {Request} req
-	 * @param {Response} res
-	 * @param {function} next
 	 * @api private
 	 */
 	handle_request(
@@ -108,11 +111,9 @@ export class Layer {
 	}
 
 	/**
-	 * Check if this route matches `path`, if so
-	 * populate `.params`.
+	 * Check if this route matches `path`, if so populate `.params`.
+	 * TODO: warn about the side-effects
 	 *
-	 * @param {String} path
-	 * @return {Boolean}
 	 * @api private
 	 */
 	match(path: string): boolean {
