@@ -511,10 +511,11 @@ export default class Router implements Types.Router {
 			}
 
 			// get pathname of request
-			let path: undefined | null | string = Router.getPathname(req)
+			const path: undefined | null | string = Router.getPathname(req)
 
-			if (path == null) {
-				return done(layerError)
+			if (path === null || path === undefined) {
+				done(layerError)
+				return
 			}
 
 			// find next matching layer
@@ -667,7 +668,7 @@ export default class Router implements Types.Router {
 		let i: number = 0
 		let name: undefined | string = undefined
 		let paramIndex: number = 0
-		let key: string | undefined = undefined
+		let key: undefined | { name: string } = undefined
 		let paramVal
 		let paramCallbacks: unknown[]
 		let paramCalled: { error: unknown; value: unknown; match: unknown }
