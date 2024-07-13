@@ -3,40 +3,44 @@ import assert from 'node:assert/strict'
 import * as http from 'node:http'
 import finalhandler from 'finalhandler'
 import { Buffer } from 'safe-buffer'
-export { request } from 'supertest'
+export * as request from 'supertest'
 import { methods } from '../../src/methods'
+import Router from '../../src/router'
+import type * as Types from '../../src/types'
 
-export function createHitHandle(num: number) {
+export function createHitHandle(num: number): Types.RouteHandler {
 	const name = `x-fn-${String(num)}`
-	return function hit(req, res, next) {
+	return function hit(_req, res, next) {
 		res.setHeader(name, 'hit')
 		next()
 	}
 }
 
-export function createServer(router): http.Server {
+export function createServer(router: Router): http.Server {
 	return http.createServer(function onRequest(req, res) {
 		router(req, res, finalhandler(req, res))
 	})
 }
 
-export function rawrequest(server: http.Server) {
+type Test = Record<
+	Types.HttpMethods,
+	(
+		method: string,
+		path: string,
+	) => {
+		expect: (
+			status: `${number}`,
+			body: string,
+			callback?: (err: Error | AssertionError | null) => void,
+		) => unknown
+	}
+>
+
+export function rawrequest(server: http.Server): Test {
 	const _headers: http.IncomingHttpHeaders = {}
 	let _method: undefined | string
 	let _path: string | null | undefined
-	const _test: Record<
-		string,
-		(
-			method: string,
-			path: string,
-		) => {
-			expect: (
-				status: `${number}`,
-				body: string,
-				callback?: (err: Error | AssertionError | null) => void,
-			) => unknown
-		}
-	> = {}
+	const _test: Test = {}
 
 	for (const method of methods) {
 		_test[method] = go.bind(null, method)
@@ -132,7 +136,7 @@ export function rawrequest(server: http.Server) {
 	return _test
 }
 
-export function shouldHaveBody(buf: Buffer) {
+export function shouldHaveBody(buf: Buffer): (res: unknown) => void {
 	return (res): void => {
 		const body = !Buffer.isBuffer(res.body)
 			? Buffer.from(res.text) //
@@ -142,25 +146,25 @@ export function shouldHaveBody(buf: Buffer) {
 	}
 }
 
-export function shouldHitHandle(num: number) {
+export function shouldHitHandle(num: number): (res: unknown) => void {
 	const header = `x-fn-${String(num)}`
-	return (res) => {
+	return (res): void => {
 		assert.equal(res.headers[header], 'hit', `should hit handle ${num}`)
 	}
 }
 
-export function shouldNotHaveBody() {
-	return (res) => {
+export function shouldNotHaveBody(): (res: unknown) => void {
+	return (res): void => {
 		assert.ok(res.text === '' || res.text === undefined)
 	}
 }
 
-export function shouldNotHitHandle(num: number) {
+export function shouldNotHitHandle(num: number): (res: unknown) => void {
 	return shouldNotHaveHeader(`x-fn-${String(num)}`)
 }
 
-function shouldNotHaveHeader(header: string) {
-	return (res) => {
+function shouldNotHaveHeader(header: string): (res: unknown) => void {
+	return (res): void => {
 		assert.ok(!(header.toLowerCase() in res.headers), `should not have header ${header}`)
 	}
 }
