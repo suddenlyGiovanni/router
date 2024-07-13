@@ -22,19 +22,14 @@ export function createServer(router: Router): http.Server {
 	})
 }
 
-type Test = Record<
-	Types.HttpMethods,
-	(
-		method: string,
-		path: string,
-	) => {
-		expect: (
-			status: `${number}`,
-			body: string,
-			callback?: (err: Error | AssertionError | null) => void,
-		) => unknown
-	}
->
+interface Expected {
+	expect: (
+		status: `${number}`,
+		body: string,
+		callback?: (err: Error | AssertionError | null) => void,
+	) => unknown
+}
+type Test = Record<Types.HttpMethods, (path: string) => Expected>
 
 export function rawrequest(server: http.Server): Test {
 	const _headers: http.IncomingHttpHeaders = {}
@@ -47,10 +42,11 @@ export function rawrequest(server: http.Server): Test {
 	}
 
 	function expect(
+		this: Expected,
 		status: `${number}`,
 		body: string,
 		callback?: (err: null | Error | AssertionError) => void,
-	) {
+	): void | Expected {
 		if (!callback) {
 			_headers[status.toLowerCase()] = body
 			// FIXME: add type definition for what `this` should point to in this context...
@@ -128,16 +124,17 @@ export function rawrequest(server: http.Server): Test {
 		_method = method
 		_path = path
 
-		return {
-			expect: expect,
-		}
+		return { expect: expect }
 	}
 
 	return _test
 }
 
+type Res = InstanceType<typeof http.ServerResponse> & {
+	req: InstanceType<typeof http.IncomingMessage>
+}
 export function shouldHaveBody(buf: Buffer): (res: unknown) => void {
-	return (res): void => {
+	return (res: Res): void => {
 		const body = !Buffer.isBuffer(res.body)
 			? Buffer.from(res.text) //
 			: res.body
@@ -146,25 +143,27 @@ export function shouldHaveBody(buf: Buffer): (res: unknown) => void {
 	}
 }
 
-export function shouldHitHandle(num: number): (res: unknown) => void {
+export function shouldHitHandle(num: number): (res: Res) => void {
 	const header = `x-fn-${String(num)}`
 	return (res): void => {
 		assert.equal(res.headers[header], 'hit', `should hit handle ${num}`)
 	}
 }
 
-export function shouldNotHaveBody(): (res: unknown) => void {
+export function shouldNotHaveBody(): (res: Res) => void {
 	return (res): void => {
 		assert.ok(res.text === '' || res.text === undefined)
 	}
 }
 
-export function shouldNotHitHandle(num: number): (res: unknown) => void {
+export function shouldNotHitHandle(
+	num: number,
+): (res: InstanceType<typeof http.ServerResponse>) => void {
 	return shouldNotHaveHeader(`x-fn-${String(num)}`)
 }
 
-function shouldNotHaveHeader(header: string): (res: unknown) => void {
-	return (res): void => {
+function shouldNotHaveHeader(header: string): (res: Res) => void {
+	return (res) => {
 		assert.ok(!(header.toLowerCase() in res.headers), `should not have header ${header}`)
 	}
 }
