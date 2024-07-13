@@ -24,10 +24,10 @@ export function createServer(router: Router): http.Server {
 
 interface Expected {
 	expect: (
-		status: `${number}`,
+		status: string,
 		body: string,
 		callback?: (err: Error | AssertionError | null) => void,
-	) => unknown
+	) => this
 }
 type Test = Record<Types.HttpMethods, (path: string) => Expected>
 
@@ -43,10 +43,10 @@ export function rawrequest(server: http.Server): Test {
 
 	function expect(
 		this: Expected,
-		status: `${number}`,
+		status: string,
 		body: string,
 		callback?: (err: null | Error | AssertionError) => void,
-	): void | Expected {
+	): Expected {
 		function onListening(this: http.Server): void {
 			const addr = this.address()
 			const port =
@@ -112,26 +112,18 @@ export function rawrequest(server: http.Server): Test {
 
 		if (!server.address()) {
 			_server = server.listen(0, onListening)
-			return
+			return this
 		}
 
 		onListening.call(server)
+		return this
 	}
 
-	function go(
-		method: string,
-		path: string,
-	): {
-		expect: (
-			status: `${number}`,
-			body: string,
-			callback?: (err: Error | AssertionError | null) => void,
-		) => unknown
-	} {
+	function go(method: string, path: string): Expected {
 		_method = method
 		_path = path
 
-		return { expect: expect }
+		return { expect }
 	}
 
 	return _test
