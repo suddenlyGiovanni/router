@@ -33,8 +33,8 @@ type Test = Record<Types.HttpMethods, (path: string) => Expected>
 
 export function rawrequest(server: http.Server): Test {
 	const _headers: http.IncomingHttpHeaders = {}
-	let _method: undefined | string
-	let _path: string | null | undefined
+	let _method: undefined | string = undefined
+	let _path: string | null | undefined = undefined
 	const _test: Test = {}
 
 	for (const method of methods) {
@@ -47,24 +47,14 @@ export function rawrequest(server: http.Server): Test {
 		body: string,
 		callback?: (err: null | Error | AssertionError) => void,
 	): void | Expected {
-		if (!callback) {
-			_headers[status.toLowerCase()] = body
-			// FIXME: add type definition for what `this` should point to in this context...
-			return this
-		}
-
-		let _server: InstanceType<typeof http.Server>
-
-		if (!server.address()) {
-			_server = server.listen(0, onListening)
-			return
-		}
-
-		onListening.call(server)
-
 		function onListening(this: http.Server): void {
 			const addr = this.address()
-			const port = addr === null ? null : typeof addr === 'object' ? addr.port : addr
+			const port =
+				addr === null
+					? null //
+					: typeof addr === 'object' //
+						? addr.port //
+						: addr
 
 			const req = http.request({
 				host: '127.0.0.1',
@@ -72,12 +62,14 @@ export function rawrequest(server: http.Server): Test {
 				path: _path,
 				port: port,
 			})
+
 			req.on('response', (res) => {
-				let buf = ''
+				let buf: string = ''
 
 				res.setEncoding('utf8')
-				res.on('data', (s) => {
-					buf += s
+				res.on('data', (chunk) => {
+					assert(typeof chunk === 'string')
+					buf += chunk
 				})
 				res.on('end', () => {
 					let err: null | AssertionError | Error = null
@@ -109,6 +101,21 @@ export function rawrequest(server: http.Server): Test {
 			})
 			req.end()
 		}
+
+		if (!callback) {
+			_headers[status.toLowerCase()] = body
+			// FIXME: add type definition for what `this` should point to in this context...
+			return this
+		}
+
+		let _server: InstanceType<typeof http.Server>
+
+		if (!server.address()) {
+			_server = server.listen(0, onListening)
+			return
+		}
+
+		onListening.call(server)
 	}
 
 	function go(
