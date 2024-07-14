@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test'
 import Router from '../src/router'
+import type * as Types from '../src/types'
 import { createServer, request } from './support/utils'
 
 describe('OPTIONS', () => {
@@ -85,16 +86,16 @@ describe('OPTIONS', () => {
 	})
 })
 
-function saw({ method, url }, res) {
+function saw({ method, url }: Types.RoutedRequest, res: Types.OutgoingMessage): void {
 	const msg = `saw ${method} ${url}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')
 	res.end(msg)
 }
 
-function sethit(num: number) {
+function sethit(num: number): Types.RouteHandler {
 	const name = `x-fn-${String(num)}`
-	return function hit(_req, res, next) {
+	return (_req, res, next) => {
 		res.setHeader(name, 'hit')
 		next()
 	}
