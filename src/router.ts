@@ -293,7 +293,7 @@ export default class Router implements Types.Router {
 		return this
 	}
 
-	public param(name: string, handler: Types.RequestParamHandler): Router {
+	public param(this: Router, name: string, handler: Types.RequestParamHandler): Router {
 		if (!name) {
 			throw new TypeError('argument name is required')
 		}
