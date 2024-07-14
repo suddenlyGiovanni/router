@@ -371,9 +371,9 @@ export default class Router implements Types.Router {
 	 * @public
 	 */
 	public use(path: Types.PathParams, ...handlers: Types.RequestHandlerParams[]): Router
+	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
 	public use(...handlers: Types.RouteHandler[]): Router
 	public use(...handlers: Types.RequestHandlerParams[]): Router
-	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
 	public use(handler: unknown): Router {
 		let offset: number = 0
 		let path: string = '/'
