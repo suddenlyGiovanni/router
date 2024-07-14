@@ -101,7 +101,7 @@ export class Route implements Types.Route {
 	 * @private
 	 */
 	public _methods(): Uppercase<Types.HttpMethods>[] {
-		let methods: Types.HttpMethods[] = Object.keys(this.methods) as Types.HttpMethods[]
+		const methods: Types.HttpMethods[] = Object.keys(this.methods) as Types.HttpMethods[]
 
 		// append automatic head
 		if (this.methods.get && !this.methods.head) {
@@ -172,35 +172,39 @@ export class Route implements Types.Route {
 	 */
 	dispatch(req: Types.RoutedRequest, res: Types.OutgoingMessage, done: Types.NextFunction): void {
 		let idx: number = 0
-		let stack: Layer[] = this.stack
+		const stack: Layer[] = this.stack
 		let sync: number = 0
 
 		if (stack.length === 0) {
-			return done()
+			done()
+			return
 		}
 
 		let method = typeof req.method === 'string' ? req.method.toLowerCase() : req.method
 
-		if (method === 'head' && !this.methods['head']) {
+		if (method === 'head' && !this.methods?.['head']) {
 			method = 'get'
 		}
 
 		req.route = this
 
-		function next(err?: any): void {
+		function next(err?: 'route' | 'router' | any): void {
 			// signal to exit route
 			if (err && err === 'route') {
-				return done()
+				done()
+				return
 			}
 
 			// signal to exit router
 			if (err && err === 'router') {
-				return done(err)
+				done(err)
+				return
 			}
 
 			// no more matching layers
 			if (idx >= stack.length) {
-				return done(err)
+				done(err)
+				return
 			}
 
 			// max sync stack
@@ -220,7 +224,8 @@ export class Route implements Types.Route {
 
 			// no match
 			if (match !== true) {
-				return done(err)
+				done(err)
+				return
 			}
 
 			if (err) {
