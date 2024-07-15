@@ -4,7 +4,7 @@ import type * as Types from '../src/types'
 import { createServer, rawrequest } from './support/utils'
 
 describe('FQDN url', () => {
-	it('should not obscure FQDNs', (done) => {
+	it('should not obscure FQDNs', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -15,7 +15,7 @@ describe('FQDN url', () => {
 			.expect('200', 'saw GET http://example.com/foo', done)
 	})
 
-	it('should strip/restore FQDN req.url', (done) => {
+	it('should strip/restore FQDN req.url', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -28,7 +28,7 @@ describe('FQDN url', () => {
 			.expect('200', 'saw GET http://example.com/blog/post/1', done)
 	})
 
-	it('should ignore FQDN in search', (done) => {
+	it('should ignore FQDN in search', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -41,7 +41,7 @@ describe('FQDN url', () => {
 			.expect('200', 'saw GET /proxy?url=http://example.com/blog/post/1', done)
 	})
 
-	it('should ignore FQDN in path', (done) => {
+	it('should ignore FQDN in path', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
