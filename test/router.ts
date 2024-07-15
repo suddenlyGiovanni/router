@@ -31,7 +31,7 @@ describe('Router', () => {
 		}, /argument callback is required/)
 	})
 
-	it('should invoke callback without "req.url"', (done) => {
+	it('should invoke callback without "req.url"', (_, done) => {
 		const router = new Router()
 		router.use(saw)
 		router({}, {}, done)
@@ -62,7 +62,7 @@ describe('Router', () => {
 			}
 		})
 
-		it('should support array of paths', (done) => {
+		it('should support array of paths', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -76,7 +76,7 @@ describe('Router', () => {
 			request(server).get('/bar').expect(200, 'saw GET /bar', cb)
 		})
 
-		it('should support regexp path', (done) => {
+		it('should support regexp path', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -90,7 +90,7 @@ describe('Router', () => {
 			request(server).get('/zoo').expect(200, 'saw GET /zoo', cb)
 		})
 
-		it('should support parameterized path', (done) => {
+		it('should support parameterized path', (_, done) => {
 			const cb = after(4, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -106,9 +106,7 @@ describe('Router', () => {
 			request(server).get('/foo/bar').expect(404, cb)
 		})
 
-		it('should not stack overflow with many registered routes', function (done) {
-			this.timeout(5000) // long-running test
-
+		it('should not stack overflow with many registered routes', { timeout: 5000 }, (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -121,14 +119,12 @@ describe('Router', () => {
 			request(server).get('/').expect(200, 'hello, world', done)
 		})
 
-		it('should not stack overflow with a large sync stack', function (done) {
-			this.timeout(5000) // long-running test
-
+		it('should not stack overflow with a large sync stack', { timeout: 5000 }, (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
 			for (let i = 0; i < 6000; i++) {
-				router.get('/foo', (req, res, next) => {
+				router.get('/foo', (_req, _res, next) => {
 					next()
 				})
 			}
@@ -139,7 +135,7 @@ describe('Router', () => {
 		})
 
 		describe('with "caseSensitive" option', () => {
-			it('should not match paths case-sensitively by default', (done) => {
+			it('should not match paths case-sensitively by default', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router()
 				const server = createServer(router)
@@ -153,7 +149,7 @@ describe('Router', () => {
 				request(server).get('/FOO/BAR').expect(200, 'saw GET /FOO/BAR', cb)
 			})
 
-			it('should not match paths case-sensitively when false', (done) => {
+			it('should not match paths case-sensitively when false', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router({ caseSensitive: false })
 				const server = createServer(router)
@@ -167,7 +163,7 @@ describe('Router', () => {
 				request(server).get('/FOO/BAR').expect(200, 'saw GET /FOO/BAR', cb)
 			})
 
-			it('should match paths case-sensitively when true', (done) => {
+			it('should match paths case-sensitively when true', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router({ caseSensitive: true })
 				const server = createServer(router)
@@ -183,7 +179,7 @@ describe('Router', () => {
 		})
 
 		describe('with "strict" option', () => {
-			it('should accept optional trailing slashes by default', (done) => {
+			it('should accept optional trailing slashes by default', (_, done) => {
 				const cb = after(2, done)
 				const router = new Router()
 				const server = createServer(router)
@@ -195,7 +191,7 @@ describe('Router', () => {
 				request(server).get('/foo/').expect(200, 'saw GET /foo/', cb)
 			})
 
-			it('should accept optional trailing slashes when false', (done) => {
+			it('should accept optional trailing slashes when false', (_, done) => {
 				const cb = after(2, done)
 				const router = new Router({ strict: false })
 				const server = createServer(router)
@@ -207,7 +203,7 @@ describe('Router', () => {
 				request(server).get('/foo/').expect(200, 'saw GET /foo/', cb)
 			})
 
-			it('should not accept optional trailing slashes when true', (done) => {
+			it('should not accept optional trailing slashes when true', (_, done) => {
 				const cb = after(2, done)
 				const router = new Router({ strict: true })
 				const server = createServer(router)
@@ -221,6 +217,7 @@ describe('Router', () => {
 		})
 	})
 
+	// biome-ignore lint/complexity/noForEach: <explanation>
 	methods
 		.slice()
 		.sort()
@@ -231,7 +228,9 @@ describe('Router', () => {
 			}
 
 			const body =
-				method !== 'head' ? shouldHaveBody(Buffer.from('hello, world')) : shouldNotHaveBody()
+				method !== 'head'
+					? shouldHaveBody(Buffer.from('hello, world')) //
+					: shouldNotHaveBody()
 
 			describe(`.${method}(path, ...fn)`, () => {
 				it('should be chainable', () => {
@@ -239,7 +238,7 @@ describe('Router', () => {
 					assert.equal(router[method]('/', helloWorld), router)
 				})
 
-				it(`should respond to a ${method.toUpperCase()} request`, (done) => {
+				it(`should respond to a ${method.toUpperCase()} request`, (_, done) => {
 					const router = new Router()
 					const server = createServer(router)
 
@@ -253,7 +252,7 @@ describe('Router', () => {
 					assert.throws(router[method].bind(router, '/', 2), /argument handler must be a function/)
 				})
 
-				it('should support array of paths', (done) => {
+				it('should support array of paths', (_, done) => {
 					const cb = after(3, done)
 					const router = new Router()
 					const server = createServer(router)
@@ -277,7 +276,7 @@ describe('Router', () => {
 						.end(cb)
 				})
 
-				it('should support regexp path', (done) => {
+				it('should support regexp path', (_, done) => {
 					const cb = after(3, done)
 					const router = new Router()
 					const server = createServer(router)
@@ -301,7 +300,7 @@ describe('Router', () => {
 						.end(cb)
 				})
 
-				it('should support parameterized path', (done) => {
+				it('should support parameterized path', (_, done) => {
 					const cb = after(4, done)
 					const router = new Router()
 					const server = createServer(router)
@@ -327,7 +326,7 @@ describe('Router', () => {
 					request(server)[method]('/foo/bar').expect(404).expect(shouldNotHitHandle(1)).end(cb)
 				})
 
-				it('should accept multiple arguments', (done) => {
+				it('should accept multiple arguments', (_, done) => {
 					const router = new Router()
 					const server = createServer(router)
 
@@ -343,7 +342,7 @@ describe('Router', () => {
 				})
 
 				describe('req.baseUrl', () => {
-					it('should be empty', (done) => {
+					it('should be empty', (_, done) => {
 						const router = new Router()
 						const server = createServer(router)
 
@@ -357,7 +356,7 @@ describe('Router', () => {
 				})
 
 				describe('req.route', () => {
-					it('should be a Route', (done) => {
+					it('should be a Route', (_, done) => {
 						const router = new Router()
 						const server = createServer(router)
 
@@ -369,7 +368,7 @@ describe('Router', () => {
 						request(server)[method]('/foo').expect('x-is-route', 'true').expect(200, done)
 					})
 
-					it('should be the matched route', (done) => {
+					it('should be the matched route', (_, done) => {
 						const router = new Router()
 						const server = createServer(router)
 
@@ -408,7 +407,7 @@ describe('Router', () => {
 			assert.equal(router.use(helloWorld), router)
 		})
 
-		it('should invoke function for all requests', (done) => {
+		it('should invoke function for all requests', (_, done) => {
 			const cb = after(4, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -424,7 +423,7 @@ describe('Router', () => {
 			rawrequest(server).options('*').expect(200, 'saw OPTIONS *', cb)
 		})
 
-		it('should not invoke for blank URLs', (done) => {
+		it('should not invoke for blank URLs', (_, done) => {
 			const router = new Router()
 			const server = createServer((req, res, next) => {
 				req.url = ''
@@ -436,7 +435,7 @@ describe('Router', () => {
 			request(server).get('/').expect(404, done)
 		})
 
-		it('should support another router', (done) => {
+		it('should support another router', (_, done) => {
 			const inner = new Router()
 			const router = new Router()
 			const server = createServer(router)
@@ -447,7 +446,7 @@ describe('Router', () => {
 			request(server).get('/').expect(200, 'saw GET /', done)
 		})
 
-		it('should accept multiple arguments', (done) => {
+		it('should accept multiple arguments', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -460,7 +459,7 @@ describe('Router', () => {
 				.expect(200, 'hello, world', done)
 		})
 
-		it('should accept single array of middleware', (done) => {
+		it('should accept single array of middleware', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -473,7 +472,7 @@ describe('Router', () => {
 				.expect(200, 'hello, world', done)
 		})
 
-		it('should accept nested arrays of middleware', (done) => {
+		it('should accept nested arrays of middleware', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -487,7 +486,7 @@ describe('Router', () => {
 				.expect(200, 'hello, world', done)
 		})
 
-		it('should not invoke singular error function', (done) => {
+		it('should not invoke singular error function', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -498,14 +497,12 @@ describe('Router', () => {
 			request(server).get('/').expect(404, done)
 		})
 
-		it('should not stack overflow with a large sync stack', function (done): void {
-			this.timeout(5000) // long-running test
-
+		it('should not stack overflow with a large sync stack', { timeout: 5000 }, (_, done): void => {
 			const router = new Router()
 			const server = createServer(router)
 
 			for (let i = 0; i < 6000; i++) {
-				router.use((req, res, next) => {
+				router.use((_req, _res, next) => {
 					next()
 				})
 			}
@@ -516,7 +513,7 @@ describe('Router', () => {
 		})
 
 		describe('error handling', () => {
-			it('should invoke error function after next(err)', (done) => {
+			it('should invoke error function after next(err)', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -529,7 +526,7 @@ describe('Router', () => {
 				request(server).get('/').expect(200, 'saw Error: boom!', done)
 			})
 
-			it('should invoke error function after throw err', (done) => {
+			it('should invoke error function after throw err', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -542,7 +539,7 @@ describe('Router', () => {
 				request(server).get('/').expect(200, 'saw Error: boom!', done)
 			})
 
-			it('should not invoke error functions above function', (done) => {
+			it('should not invoke error functions above function', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -557,7 +554,7 @@ describe('Router', () => {
 		})
 
 		describe('next("route")', () => {
-			it('should invoke next handler', (done) => {
+			it('should invoke next handler', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -571,7 +568,7 @@ describe('Router', () => {
 				request(server).get('/').expect('x-next', 'route').expect(200, 'saw GET /', done)
 			})
 
-			it('should invoke next function', (done) => {
+			it('should invoke next function', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -590,7 +587,7 @@ describe('Router', () => {
 					.expect(200, 'saw GET /', done)
 			})
 
-			it('should not invoke error handlers', (done) => {
+			it('should not invoke error handlers', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -606,7 +603,7 @@ describe('Router', () => {
 		})
 
 		describe('next("router")', () => {
-			it('should exit the router', (done) => {
+			it('should exit the router', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -625,7 +622,7 @@ describe('Router', () => {
 					.expect(404, done)
 			})
 
-			it('should not invoke error handlers', (done) => {
+			it('should not invoke error handlers', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -641,7 +638,7 @@ describe('Router', () => {
 		})
 
 		describe('req.baseUrl', () => {
-			it('should be empty', (done) => {
+			it('should be empty', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -658,7 +655,7 @@ describe('Router', () => {
 			assert.equal(router.use('/', helloWorld), router)
 		})
 
-		it('should invoke when req.url starts with path', (done) => {
+		it('should invoke when req.url starts with path', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -672,7 +669,7 @@ describe('Router', () => {
 			request(server).post('/foo/bar').expect(200, 'saw POST /bar', cb)
 		})
 
-		it('should match if path has trailing slash', (done) => {
+		it('should match if path has trailing slash', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -686,7 +683,7 @@ describe('Router', () => {
 			request(server).post('/foo/bar').expect(200, 'saw POST /bar', cb)
 		})
 
-		it('should support array of paths', (done) => {
+		it('should support array of paths', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -700,7 +697,7 @@ describe('Router', () => {
 			request(server).get('/bar').expect(200, 'saw GET /', cb)
 		})
 
-		it('should support regexp path', (done) => {
+		it('should support regexp path', (_, done) => {
 			const cb = after(5, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -718,7 +715,7 @@ describe('Router', () => {
 			request(server).get('/get/zoo').expect(404, cb)
 		})
 
-		it('should ensure regexp matches path prefix', (done) => {
+		it('should ensure regexp matches path prefix', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -735,7 +732,7 @@ describe('Router', () => {
 				.expect(200, done)
 		})
 
-		it('should support parameterized path', (done) => {
+		it('should support parameterized path', (_, done) => {
 			const cb = after(4, done)
 			const router = new Router()
 			const server = createServer(router)
@@ -751,7 +748,7 @@ describe('Router', () => {
 			request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
 		})
 
-		it('should accept multiple arguments', (done) => {
+		it('should accept multiple arguments', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -765,7 +762,7 @@ describe('Router', () => {
 		})
 
 		describe('with "caseSensitive" option', () => {
-			it('should not match paths case-sensitively by default', (done) => {
+			it('should not match paths case-sensitively by default', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router()
 				const server = createServer(router)
@@ -779,7 +776,7 @@ describe('Router', () => {
 				request(server).get('/FOO/BAR').expect(200, 'saw GET /BAR', cb)
 			})
 
-			it('should not match paths case-sensitively when false', (done) => {
+			it('should not match paths case-sensitively when false', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router({ caseSensitive: false })
 				const server = createServer(router)
@@ -793,7 +790,7 @@ describe('Router', () => {
 				request(server).get('/FOO/BAR').expect(200, 'saw GET /BAR', cb)
 			})
 
-			it('should match paths case-sensitively when true', (done) => {
+			it('should match paths case-sensitively when true', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router({ caseSensitive: true })
 				const server = createServer(router)
@@ -809,7 +806,7 @@ describe('Router', () => {
 		})
 
 		describe('with "strict" option', () => {
-			it('should accept optional trailing slashes by default', (done) => {
+			it('should accept optional trailing slashes by default', (_, done) => {
 				const cb = after(2, done)
 				const router = new Router()
 				const server = createServer(router)
@@ -821,7 +818,7 @@ describe('Router', () => {
 				request(server).get('/foo/').expect(200, 'saw GET /', cb)
 			})
 
-			it('should accept optional trailing slashes when false', (done) => {
+			it('should accept optional trailing slashes when false', (_, done) => {
 				const cb = after(2, done)
 				const router = new Router({ strict: false })
 				const server = createServer(router)
@@ -833,7 +830,7 @@ describe('Router', () => {
 				request(server).get('/foo/').expect(200, 'saw GET /', cb)
 			})
 
-			it('should accept optional trailing slashes when true', (done) => {
+			it('should accept optional trailing slashes when true', (_, done) => {
 				const cb = after(2, done)
 				const router = new Router({ strict: true })
 				const server = createServer(router)
@@ -847,7 +844,7 @@ describe('Router', () => {
 		})
 
 		describe('next("route")', () => {
-			it('should invoke next handler', (done) => {
+			it('should invoke next handler', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -861,7 +858,7 @@ describe('Router', () => {
 				request(server).get('/foo').expect('x-next', 'route').expect(200, 'saw GET /', done)
 			})
 
-			it('should invoke next function', (done) => {
+			it('should invoke next function', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -882,7 +879,7 @@ describe('Router', () => {
 		})
 
 		describe('req.baseUrl', () => {
-			it('should contain the stripped path', (done) => {
+			it('should contain the stripped path', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -891,7 +888,7 @@ describe('Router', () => {
 				request(server).get('/foo/bar').expect(200, 'saw /foo', done)
 			})
 
-			it('should contain the stripped path for multiple levels', (done) => {
+			it('should contain the stripped path for multiple levels', (_, done) => {
 				const router1 = new Router()
 				const router2 = new Router()
 				const server = createServer(router1)
@@ -902,7 +899,7 @@ describe('Router', () => {
 				request(server).get('/foo/bar/baz').expect(200, 'saw /foo/bar', done)
 			})
 
-			it('should be altered correctly', (done) => {
+			it('should be altered correctly', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 				const sub1 = new Router()
@@ -935,7 +932,7 @@ describe('Router', () => {
 		})
 
 		describe('req.url', () => {
-			it('should strip path from req.url', (done) => {
+			it('should strip path from req.url', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -944,7 +941,7 @@ describe('Router', () => {
 				request(server).get('/foo/bar').expect(200, 'saw GET /bar', done)
 			})
 
-			it('should restore req.url after stripping', (done) => {
+			it('should restore req.url after stripping', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -957,7 +954,7 @@ describe('Router', () => {
 					.expect(200, 'saw GET /foo/bar', done)
 			})
 
-			it('should strip/restore with trailing stash', (done) => {
+			it('should strip/restore with trailing stash', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
@@ -970,7 +967,7 @@ describe('Router', () => {
 	})
 
 	describe('request rewriting', () => {
-		it('should support altering req.method', (done) => {
+		it('should support altering req.method', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -993,12 +990,12 @@ describe('Router', () => {
 				.expect(200, 'saw PUT /foo', done)
 		})
 
-		it('should support altering req.url', (done) => {
+		it('should support altering req.url', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
 			router.get('/bar', createHitHandle(1))
-			router.get('/foo', createHitHandle(2), (req, res, next) => {
+			router.get('/foo', createHitHandle(2), (req, _, next) => {
 				req.url = '/bar'
 				next()
 			})
