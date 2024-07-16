@@ -43,7 +43,7 @@ describe('Router', () => {
 			assert.equal(router.all('/', helloWorld), router)
 		})
 
-		it('should respond to all methods', (done) => {
+		it('should respond to all methods', (_, done) => {
 			const cb = after(methods.length, done)
 			const router = new Router()
 			const server = createServer(router)

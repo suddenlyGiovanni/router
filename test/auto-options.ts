@@ -4,7 +4,7 @@ import type * as Types from '../src/types'
 import { createServer, request } from './support/utils'
 
 describe('OPTIONS', () => {
-	it('should respond with defined routes', (done) => {
+	it('should respond with defined routes', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -19,7 +19,7 @@ describe('OPTIONS', () => {
 			.expect(200, 'GET, HEAD, POST, PUT', done)
 	})
 
-	it('should not contain methods multiple times', (done) => {
+	it('should not contain methods multiple times', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -34,7 +34,7 @@ describe('OPTIONS', () => {
 			.expect('Allow', 'GET, HEAD, PUT', done)
 	})
 
-	it('should not include "all" routes', (done) => {
+	it('should not include "all" routes', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -50,7 +50,7 @@ describe('OPTIONS', () => {
 			.expect(200, 'GET, HEAD, PUT', done)
 	})
 
-	it('should not respond if no matching path', (done) => {
+	it('should not respond if no matching path', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -59,7 +59,7 @@ describe('OPTIONS', () => {
 		request(server).options('/').expect(404, done)
 	})
 
-	it('should do nothing with explicit options route', (done) => {
+	it('should do nothing with explicit options route', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -70,7 +70,7 @@ describe('OPTIONS', () => {
 	})
 
 	describe('when error occurs in respone handler', () => {
-		it('should pass error to callback', (done) => {
+		it('should pass error to callback', (_, done) => {
 			const router = new Router()
 			const server = createServer((_req, res, _next) => {
 				res.writeHead(200)

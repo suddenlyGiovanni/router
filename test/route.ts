@@ -21,7 +21,7 @@ describe('Router', () => {
 			assert.equal(route.path, '/foo')
 		})
 
-		it('should respond to multiple methods', (done) => {
+		it('should respond to multiple methods', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const route = router.route('/foo')
@@ -37,7 +37,7 @@ describe('Router', () => {
 			request(server).put('/foo').expect(404, cb)
 		})
 
-		it('should route without method', (done) => {
+		it('should route without method', (_, done) => {
 			const router = new Router()
 			const route = router.route('/foo')
 			const server = createServer((req, res, next) => {
@@ -61,7 +61,7 @@ describe('Router', () => {
 				.expect(200, 'saw undefined /foo', done)
 		})
 
-		it('should stack', (done) => {
+		it('should stack', (_, done) => {
 			const cb = after(3, done)
 			const router = new Router()
 			const route = router.route('/foo')
@@ -88,7 +88,7 @@ describe('Router', () => {
 			request(server).put('/foo').expect('x-fn-2', 'hit').expect(200, 'saw PUT /foo', cb)
 		})
 
-		it('should not error on empty route', (done) => {
+		it('should not error on empty route', (_, done) => {
 			const cb = after(2, done)
 			const router = new Router()
 			const route = router.route('/foo')
@@ -99,7 +99,7 @@ describe('Router', () => {
 			request(server).head('/foo').expect(404, cb)
 		})
 
-		it('should not invoke singular error route', (done) => {
+		it('should not invoke singular error route', (_, done) => {
 			const router = new Router()
 			const route = router.route('/foo')
 			const server = createServer(router)

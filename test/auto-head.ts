@@ -4,7 +4,7 @@ import type * as Types from '../src/types'
 import { createServer, request } from './support/utils'
 
 describe('HEAD', () => {
-	it('should invoke get without head', (done) => {
+	it('should invoke get without head', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 
@@ -17,7 +17,7 @@ describe('HEAD', () => {
 			.expect(200, done)
 	})
 
-	it('should invoke head if prior to get', (done) => {
+	it('should invoke head if prior to get', (_, done) => {
 		const router = new Router()
 		const server = createServer(router)
 

@@ -176,7 +176,7 @@ describe('Router', () => {
 				.expect('get user bob 1 times', done)
 		})
 
-		it('should keep changes to req.params value', (done) => {
+		it('should keep changes to req.params value', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -200,7 +200,7 @@ describe('Router', () => {
 				.expect('get user 1 1 times', done)
 		})
 
-		it('should invoke fn if path value differs', (done) => {
+		it('should invoke fn if path value differs', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -223,7 +223,7 @@ describe('Router', () => {
 			request(server).get('/user/bob').expect('get user bob 2 times: user, bob', done)
 		})
 
-		it('should catch exception in fn', (done) => {
+		it('should catch exception in fn', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -241,7 +241,7 @@ describe('Router', () => {
 				.expect('500', /Error: boom/, done)
 		})
 
-		it('should catch exception in chained fn', (done) => {
+		it('should catch exception in chained fn', (_, done) => {
 			const router = new Router()
 			const server = createServer(router)
 
@@ -264,7 +264,7 @@ describe('Router', () => {
 		})
 
 		describe('next("route")', () => {
-			it('should cause route with param to be skipped', (done) => {
+			it('should cause route with param to be skipped', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router()
 				const server = createServer(router)
@@ -304,7 +304,7 @@ describe('Router', () => {
 					.expect('400', 'cannot get a new user', cb)
 			})
 
-			it('should invoke fn if path value differs', (done) => {
+			it('should invoke fn if path value differs', (_, done) => {
 				const router = new Router()
 				const server = createServer(router)
 
