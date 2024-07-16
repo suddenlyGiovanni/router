@@ -1,21 +1,15 @@
 import process from 'node:process'
-import { after, describe, it } from 'node:test'
+import { describe, it } from 'node:test'
+
 import Router from '../src/router'
 import type * as Types from '../src/types'
-import {
-	assert,
-	createHitHandle,
-	createServer,
-	request,
-	shouldHitHandle,
-	shouldNotHitHandle,
-} from './support/utils'
+import * as Utils from './support/utils'
 
 describe('Router', () => {
 	describe('.param(name, fn)', () => {
 		it('should reject missing name', () => {
 			const router = new Router()
-			assert.throws(
+			Utils.assert.throws(
 				// @ts-expect-error TS2769: No overload matches this call.
 				router.param.bind(router),
 				/argument name is required/,
@@ -24,7 +18,7 @@ describe('Router', () => {
 
 		it('should reject bad name', () => {
 			const router = new Router()
-			assert.throws(
+			Utils.assert.throws(
 				// @ts-expect-error TS2769: No overload matches this call.
 				router.param.bind(router, 42),
 				/argument name must be a string/,
@@ -33,7 +27,7 @@ describe('Router', () => {
 
 		it('should reject missing fn', () => {
 			const router = new Router()
-			assert.throws(
+			Utils.assert.throws(
 				// @ts-expect-error TS2769: No overload matches this call.
 				router.param.bind(router, 'id'),
 				/argument fn is required/,
@@ -42,7 +36,7 @@ describe('Router', () => {
 
 		it('should reject bad fn', () => {
 			const router = new Router()
-			assert.throws(
+			Utils.assert.throws(
 				// @ts-expect-error TS2345: Argument of type number is not assignable to parameter of type RequestParamHandler
 				router.param.bind(router, 'id', 42),
 				/argument fn must be a function/,
@@ -50,9 +44,9 @@ describe('Router', () => {
 		})
 
 		it('should map logic for a path param', (done) => {
-			const cb = after(2, done)
+			const cb = Utils.after(2, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('id', function parseId({ params }, _, next, val) {
 				params['id'] = Number(val)
@@ -64,14 +58,14 @@ describe('Router', () => {
 				res.end(`get user ${params?.['id']}`)
 			})
 
-			request(server).get('/user/2').expect(200, 'get user 2', cb)
+			Utils.request(server).get('/user/2').expect(200, 'get user 2', cb)
 
-			request(server).get('/user/bob').expect(200, 'get user NaN', cb)
+			Utils.request(server).get('/user/bob').expect(200, 'get user NaN', cb)
 		})
 
 		it('should allow chaining', (done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('id', function parseId({ params }, _, next, val) {
 				params['id'] = Number(val)
@@ -88,12 +82,12 @@ describe('Router', () => {
 				res.end(`get user ${params['id']} (${itemId})`)
 			})
 
-			request(server).get('/user/2').expect(200, 'get user 2 (2)', done)
+			Utils.request(server).get('/user/2').expect(200, 'get user 2 (2)', done)
 		})
 
 		it('should automatically decode path value', (done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('user', function parseUser(req, _, next, user) {
 				req['user'] = user
@@ -105,12 +99,12 @@ describe('Router', () => {
 				res.end(`get user ${params['id']}`)
 			})
 
-			request(server).get('/user/%22bob%2Frobert%22').expect('get user "bob/robert"', done)
+			Utils.request(server).get('/user/%22bob%2Frobert%22').expect('get user "bob/robert"', done)
 		})
 
 		it('should 400 on invalid path value', (done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('user', function parseUser(req, _, next, user) {
 				req['user'] = user
@@ -122,15 +116,15 @@ describe('Router', () => {
 				res.end(`get user ${params?.['id']}`)
 			})
 
-			request(server)
+			Utils.request(server)
 				.get('/user/%bob')
 				.expect(400, /URIError: Failed to decode param/, done)
 		})
 
 		it('should only invoke fn when necessary', (done) => {
-			const cb = after(2, done)
+			const cb = Utils.after(2, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('id', function parseId(_, res, next, val) {
 				res.setHeader('x-id', val)
@@ -144,11 +138,11 @@ describe('Router', () => {
 			router.get('/user/:user', saw)
 			router.put('/user/:id', saw)
 
-			request(server)
+			Utils.request(server)
 				.get('/user/bob')
 				.expect(500, /Error: boom/, cb)
 
-			request(server)
+			Utils.request(server)
 				.put('/user/bob')
 				.expect('x-id', 'bob') //
 				.expect('200', 'saw PUT /user/bob', cb)
@@ -156,7 +150,7 @@ describe('Router', () => {
 
 		it('should only invoke fn once per request', (done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('user', function parseUser(req, _, next, user) {
 				req['count'] = (req['count'] ?? 0) + 1
@@ -171,14 +165,14 @@ describe('Router', () => {
 				res.end(`get user ${req?.['user']} ${req?.['count']} times`)
 			})
 
-			request(server)
+			Utils.request(server)
 				.get('/user/bob') //
 				.expect('get user bob 1 times', done)
 		})
 
 		it('should keep changes to req.params value', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('id', function parseUser(req, _, next, val) {
 				req['count'] = (req?.['count'] ?? 0) + 1
@@ -195,14 +189,14 @@ describe('Router', () => {
 				res.end(`get user ${req.params?.['id']} ${req?.['count']} times`)
 			})
 
-			request(server)
+			Utils.request(server)
 				.get('/user/01') //
 				.expect('get user 1 1 times', done)
 		})
 
 		it('should invoke fn if path value differs', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('user', function parseUser(req, _, next, user) {
 				req['count'] = (req?.['count'] ?? 0) + 1
@@ -220,12 +214,12 @@ describe('Router', () => {
 				)
 			})
 
-			request(server).get('/user/bob').expect('get user bob 2 times: user, bob', done)
+			Utils.request(server).get('/user/bob').expect('get user bob 2 times: user, bob', done)
 		})
 
 		it('should catch exception in fn', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('user', function parseUser(_req, _res, _next, _user) {
 				throw new Error('boom')
@@ -236,14 +230,14 @@ describe('Router', () => {
 				res.end(`get user ${params?.['id']}`)
 			})
 
-			request(server)
+			Utils.request(server)
 				.get('/user/bob')
 				.expect('500', /Error: boom/, done)
 		})
 
 		it('should catch exception in chained fn', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.param('user', function parseUser(_req, _res, next, _user) {
 				process.nextTick(next)
@@ -258,16 +252,16 @@ describe('Router', () => {
 				res.end(`get user ${params?.['id']}`)
 			})
 
-			request(server)
+			Utils.request(server)
 				.get('/user/bob')
 				.expect('500', /Error: boom/, done)
 		})
 
 		describe('next("route")', () => {
 			it('should cause route with param to be skipped', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.param('id', function parseId(req, _, next, val) {
 					const id = Number(val)
@@ -291,22 +285,22 @@ describe('Router', () => {
 					res.end('cannot get a new user')
 				})
 
-				request(server)
+				Utils.request(server)
 					.get('/user/2') //
 					.expect('200', 'get user 2', cb)
 
-				request(server)
+				Utils.request(server)
 					.get('/user/bob') //
 					.expect('404', cb)
 
-				request(server)
+				Utils.request(server)
 					.get('/user/new') //
 					.expect('400', 'cannot get a new user', cb)
 			})
 
 			it('should invoke fn if path value differs', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.param('user', function parseUser(req, _, next, user) {
 					req['count'] = (req?.['count'] ?? 0) + 1
@@ -319,8 +313,8 @@ describe('Router', () => {
 					)
 				})
 
-				router.get('/:user/bob', createHitHandle(1))
-				router.get('/user/:user', createHitHandle(2))
+				router.get('/:user/bob', Utils.createHitHandle(1))
+				router.get('/user/:user', Utils.createHitHandle(2))
 
 				router.use((req, res) => {
 					res.end(
@@ -328,10 +322,10 @@ describe('Router', () => {
 					)
 				})
 
-				request(server)
+				Utils.request(server)
 					.get('/user/bob')
-					.expect(shouldNotHitHandle(1))
-					.expect(shouldHitHandle(2))
+					.expect(Utils.shouldNotHitHandle(1))
+					.expect(Utils.shouldHitHandle(2))
 					.expect('get user bob 2 times: user, bob', done)
 			})
 		})

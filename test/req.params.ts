@@ -1,46 +1,49 @@
 import { describe, it } from 'node:test'
+
 import Router from '../src/router'
-import { createServer, request } from './support/utils'
+import * as Utils from './support/utils'
 
 describe('req.params', () => {
 	it('should default to empty object', (_, done) => {
 		const router = new Router()
-		const server = createServer(router)
+		const server = Utils.createServer(router)
 
 		router.get('/', sawParams)
 
-		request(server).get('/').expect(200, '{}', done)
+		Utils.request(server).get('/').expect(200, '{}', done)
 	})
 
 	it('should not exist outside the router', (_, done) => {
 		const router = new Router()
-		const server = createServer((req, res, next) => {
-			router(req, res, function (err) {
-				if (err) return next(err)
+		const server = Utils.createServer((req, res, next) => {
+			router(req, res, (err) => {
+				if (err) {
+					return next(err)
+				}
 				sawParams(req, res)
 			})
 		})
 
 		router.get('/', hitParams(1))
 
-		request(server).get('/').expect('x-params-1', '{}').expect(200, '', done)
+		Utils.request(server).get('/').expect('x-params-1', '{}').expect(200, '', done)
 	})
 
 	it('should overwrite value outside the router', (_, done) => {
 		const router = new Router()
-		const server = createServer((req, res, next) => {
+		const server = Utils.createServer((req, res, next) => {
 			req.params = { foo: 'bar' }
 			router(req, res, done)
 		})
 
 		router.get('/', sawParams)
 
-		request(server).get('/').expect(200, '{}', done)
+		Utils.request(server).get('/').expect(200, '{}', done)
 	})
 
 	it('should restore previous value outside the router', (_, done) => {
 		const router = new Router()
-		const server = createServer((req, res, next) => {
+		const server = Utils.createServer((req, res, next) => {
 			req.params = { foo: 'bar' }
 
 			router(req, res, (err) => {
@@ -53,13 +56,13 @@ describe('req.params', () => {
 
 		router.get('/', hitParams(1))
 
-		request(server).get('/').expect('x-params-1', '{}').expect(200, '{"foo":"bar"}', done)
+		Utils.request(server).get('/').expect('x-params-1', '{}').expect(200, '{"foo":"bar"}', done)
 	})
 
 	describe('when "mergeParams: true"', () => {
 		it('should merge outside object with params', (_, done) => {
 			const router = new Router({ mergeParams: true })
-			const server = createServer((req, res, next) => {
+			const server = Utils.createServer((req, res, next) => {
 				req.params = { foo: 'bar' }
 
 				router(req, res, (err) => {
@@ -72,7 +75,7 @@ describe('req.params', () => {
 
 			router.get('/:fizz', hitParams(1))
 
-			request(server)
+			Utils.request(server)
 				.get('/buzz')
 				.expect('x-params-1', '{"foo":"bar","fizz":"buzz"}')
 				.expect(200, '{"foo":"bar"}', done)
@@ -80,7 +83,7 @@ describe('req.params', () => {
 
 		it('should ignore non-object outside object', (_, done) => {
 			const router = new Router({ mergeParams: true })
-			const server = createServer((req, res, next) => {
+			const server = Utils.createServer((req, res, next) => {
 				req.params = 42
 
 				router(req, res, (err) => {
@@ -93,12 +96,15 @@ describe('req.params', () => {
 
 			router.get('/:fizz', hitParams(1))
 
-			request(server).get('/buzz').expect('x-params-1', '{"fizz":"buzz"}').expect(200, '42', done)
+			Utils.request(server)
+				.get('/buzz')
+				.expect('x-params-1', '{"fizz":"buzz"}')
+				.expect(200, '42', done)
 		})
 
 		it('should overwrite outside keys that are the same', (_, done) => {
 			const router = new Router({ mergeParams: true })
-			const server = createServer((req, res, next) => {
+			const server = Utils.createServer((req, res, next) => {
 				req.params = { foo: 'bar' }
 
 				router(req, res, (err) => {
@@ -111,7 +117,7 @@ describe('req.params', () => {
 
 			router.get('/:foo', hitParams(1))
 
-			request(server)
+			Utils.request(server)
 				.get('/buzz')
 				.expect('x-params-1', '{"foo":"buzz"}')
 				.expect(200, '{"foo":"bar"}', done)
@@ -120,7 +126,7 @@ describe('req.params', () => {
 		describe('with numeric properties in req.params', () => {
 			it('should merge numeric properties by offsetting', (_, done) => {
 				const router = new Router({ mergeParams: true })
-				const server = createServer((req, res, next) => {
+				const server = Utils.createServer((req, res, next) => {
 					req.params = { '0': 'foo', '1': 'bar' }
 
 					router(req, res, (err) => {
@@ -133,7 +139,7 @@ describe('req.params', () => {
 
 				router.get('/*', hitParams(1))
 
-				request(server)
+				Utils.request(server)
 					.get('/buzz')
 					.expect('x-params-1', '{"0":"foo","1":"bar","2":"buzz"}')
 					.expect(200, '{"0":"foo","1":"bar"}', done)
@@ -141,7 +147,7 @@ describe('req.params', () => {
 
 			it('should merge with same numeric properties', (_, done) => {
 				const router = new Router({ mergeParams: true })
-				const server = createServer((req, res, next) => {
+				const server = Utils.createServer((req, res, next) => {
 					req.params = { '0': 'foo' }
 
 					router(req, res, (err) => {
@@ -154,7 +160,7 @@ describe('req.params', () => {
 
 				router.get('/*', hitParams(1))
 
-				request(server)
+				Utils.request(server)
 					.get('/bar')
 					.expect('x-params-1', '{"0":"foo","1":"bar"}')
 					.expect(200, '{"0":"foo"}', done)

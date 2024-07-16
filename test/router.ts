@@ -1,31 +1,22 @@
-import { after, describe, it } from 'node:test'
+import { describe, it } from 'node:test'
 import { Buffer } from 'safe-buffer'
+
 import { methods } from '../src/methods'
 import Router from '../src/router'
-import {
-	assert,
-	createHitHandle,
-	createServer,
-	rawrequest,
-	request,
-	shouldHaveBody,
-	shouldHitHandle,
-	shouldNotHaveBody,
-	shouldNotHitHandle,
-} from './support/utils'
+import * as Utils from './support/utils'
 
 describe('Router', () => {
 	it('should return a function', () => {
-		assert.equal(typeof Router(), 'function')
+		Utils.assert.equal(typeof Router(), 'function')
 	})
 
 	it('should return a function using new', () => {
-		assert.equal(typeof new Router(), 'function')
+		Utils.assert.equal(typeof new Router(), 'function')
 	})
 
 	it('should reject missing callback', () => {
 		const router = new Router()
-		assert.throws(() => {
+		Utils.assert.throws(() => {
 			// @ts-expect-error
 			router({}, {})
 		}, /argument callback is required/)
@@ -40,13 +31,13 @@ describe('Router', () => {
 	describe('.all(path, fn)', () => {
 		it('should be chainable', () => {
 			const router = new Router()
-			assert.equal(router.all('/', helloWorld), router)
+			Utils.assert.equal(router.all('/', helloWorld), router)
 		})
 
 		it('should respond to all methods', (_, done) => {
-			const cb = after(methods.length, done)
+			const cb = Utils.after(methods.length, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 			router.all('/', helloWorld)
 
 			for (const method of methods) {
@@ -56,59 +47,61 @@ describe('Router', () => {
 				}
 
 				const body =
-					method !== 'head' ? shouldHaveBody(Buffer.from('hello, world')) : shouldNotHaveBody()
+					method !== 'head'
+						? Utils.shouldHaveBody(Buffer.from('hello, world'))
+						: Utils.shouldNotHaveBody()
 
-				request(server)[method]('/').expect(200).expect(body).end(cb)
+				Utils.request(server)[method]('/').expect(200).expect(body).end(cb)
 			}
 		})
 
 		it('should support array of paths', (_, done) => {
-			const cb = after(3, done)
+			const cb = Utils.after(3, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.all(['/foo', '/bar'], saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).get('/foo').expect(200, 'saw GET /foo', cb)
+			Utils.request(server).get('/foo').expect(200, 'saw GET /foo', cb)
 
-			request(server).get('/bar').expect(200, 'saw GET /bar', cb)
+			Utils.request(server).get('/bar').expect(200, 'saw GET /bar', cb)
 		})
 
 		it('should support regexp path', (_, done) => {
-			const cb = after(3, done)
+			const cb = Utils.after(3, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.all(/^\/[a-z]oo$/, saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).get('/foo').expect(200, 'saw GET /foo', cb)
+			Utils.request(server).get('/foo').expect(200, 'saw GET /foo', cb)
 
-			request(server).get('/zoo').expect(200, 'saw GET /zoo', cb)
+			Utils.request(server).get('/zoo').expect(200, 'saw GET /zoo', cb)
 		})
 
 		it('should support parameterized path', (_, done) => {
-			const cb = after(4, done)
+			const cb = Utils.after(4, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.all('/:thing', saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).get('/foo').expect(200, 'saw GET /foo', cb)
+			Utils.request(server).get('/foo').expect(200, 'saw GET /foo', cb)
 
-			request(server).get('/bar').expect(200, 'saw GET /bar', cb)
+			Utils.request(server).get('/bar').expect(200, 'saw GET /bar', cb)
 
-			request(server).get('/foo/bar').expect(404, cb)
+			Utils.request(server).get('/foo/bar').expect(404, cb)
 		})
 
 		it('should not stack overflow with many registered routes', { timeout: 5000 }, (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			for (let i = 0; i < 6000; i++) {
 				router.get(`/thing${i}`, helloWorld)
@@ -116,12 +109,12 @@ describe('Router', () => {
 
 			router.get('/', helloWorld)
 
-			request(server).get('/').expect(200, 'hello, world', done)
+			Utils.request(server).get('/').expect(200, 'hello, world', done)
 		})
 
 		it('should not stack overflow with a large sync stack', { timeout: 5000 }, (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			for (let i = 0; i < 6000; i++) {
 				router.get('/foo', (_req, _res, next) => {
@@ -131,88 +124,88 @@ describe('Router', () => {
 
 			router.get('/foo', helloWorld)
 
-			request(server).get('/foo').expect(200, 'hello, world', done)
+			Utils.request(server).get('/foo').expect(200, 'hello, world', done)
 		})
 
 		describe('with "caseSensitive" option', () => {
 			it('should not match paths case-sensitively by default', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.all('/foo/bar', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /foo/bar', cb)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /foo/bar', cb)
 
-				request(server).get('/FOO/bar').expect(200, 'saw GET /FOO/bar', cb)
+				Utils.request(server).get('/FOO/bar').expect(200, 'saw GET /FOO/bar', cb)
 
-				request(server).get('/FOO/BAR').expect(200, 'saw GET /FOO/BAR', cb)
+				Utils.request(server).get('/FOO/BAR').expect(200, 'saw GET /FOO/BAR', cb)
 			})
 
 			it('should not match paths case-sensitively when false', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router({ caseSensitive: false })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.all('/foo/bar', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /foo/bar', cb)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /foo/bar', cb)
 
-				request(server).get('/FOO/bar').expect(200, 'saw GET /FOO/bar', cb)
+				Utils.request(server).get('/FOO/bar').expect(200, 'saw GET /FOO/bar', cb)
 
-				request(server).get('/FOO/BAR').expect(200, 'saw GET /FOO/BAR', cb)
+				Utils.request(server).get('/FOO/BAR').expect(200, 'saw GET /FOO/BAR', cb)
 			})
 
 			it('should match paths case-sensitively when true', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router({ caseSensitive: true })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.all('/foo/bar', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /foo/bar', cb)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /foo/bar', cb)
 
-				request(server).get('/FOO/bar').expect(404, cb)
+				Utils.request(server).get('/FOO/bar').expect(404, cb)
 
-				request(server).get('/FOO/BAR').expect(404, cb)
+				Utils.request(server).get('/FOO/BAR').expect(404, cb)
 			})
 		})
 
 		describe('with "strict" option', () => {
 			it('should accept optional trailing slashes by default', (_, done) => {
-				const cb = after(2, done)
+				const cb = Utils.after(2, done)
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.all('/foo', saw)
 
-				request(server).get('/foo').expect(200, 'saw GET /foo', cb)
+				Utils.request(server).get('/foo').expect(200, 'saw GET /foo', cb)
 
-				request(server).get('/foo/').expect(200, 'saw GET /foo/', cb)
+				Utils.request(server).get('/foo/').expect(200, 'saw GET /foo/', cb)
 			})
 
 			it('should accept optional trailing slashes when false', (_, done) => {
-				const cb = after(2, done)
+				const cb = Utils.after(2, done)
 				const router = new Router({ strict: false })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.all('/foo', saw)
 
-				request(server).get('/foo').expect(200, 'saw GET /foo', cb)
+				Utils.request(server).get('/foo').expect(200, 'saw GET /foo', cb)
 
-				request(server).get('/foo/').expect(200, 'saw GET /foo/', cb)
+				Utils.request(server).get('/foo/').expect(200, 'saw GET /foo/', cb)
 			})
 
 			it('should not accept optional trailing slashes when true', (_, done) => {
-				const cb = after(2, done)
+				const cb = Utils.after(2, done)
 				const router = new Router({ strict: true })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.all('/foo', saw)
 
-				request(server).get('/foo').expect(200, 'saw GET /foo', cb)
+				Utils.request(server).get('/foo').expect(200, 'saw GET /foo', cb)
 
-				request(server).get('/foo/').expect(404, cb)
+				Utils.request(server).get('/foo/').expect(404, cb)
 			})
 		})
 	})
@@ -229,114 +222,121 @@ describe('Router', () => {
 
 			const body =
 				method !== 'head'
-					? shouldHaveBody(Buffer.from('hello, world')) //
-					: shouldNotHaveBody()
+					? Utils.shouldHaveBody(Buffer.from('hello, world')) //
+					: Utils.shouldNotHaveBody()
 
 			describe(`.${method}(path, ...fn)`, () => {
 				it('should be chainable', () => {
 					const router = new Router()
-					assert.equal(router[method]('/', helloWorld), router)
+					Utils.assert.equal(router[method]('/', helloWorld), router)
 				})
 
 				it(`should respond to a ${method.toUpperCase()} request`, (_, done) => {
 					const router = new Router()
-					const server = createServer(router)
+					const server = Utils.createServer(router)
 
 					router[method]('/', helloWorld)
 
-					request(server)[method]('/').expect(200).expect(body).end(done)
+					Utils.request(server)[method]('/').expect(200).expect(body).end(done)
 				})
 
 				it('should reject invalid fn', () => {
 					const router = new Router()
-					assert.throws(router[method].bind(router, '/', 2), /argument handler must be a function/)
+					Utils.assert.throws(
+						router[method].bind(router, '/', 2),
+						/argument handler must be a function/,
+					)
 				})
 
 				it('should support array of paths', (_, done) => {
-					const cb = after(3, done)
+					const cb = Utils.after(3, done)
 					const router = new Router()
-					const server = createServer(router)
+					const server = Utils.createServer(router)
 
-					router[method](['/foo', '/bar'], createHitHandle(1), helloWorld)
+					router[method](['/foo', '/bar'], Utils.createHitHandle(1), helloWorld)
 
-					request(server)[method]('/').expect(404).expect(shouldNotHitHandle(1)).end(cb)
+					Utils.request(server)[method]('/').expect(404).expect(Utils.shouldNotHitHandle(1)).end(cb)
 
-					request(server)
+					Utils.request(server)
 						[method]('/foo')
 						.expect(200)
-						.expect(shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(1))
 						.expect(body)
 						.end(cb)
 
-					request(server)
+					Utils.request(server)
 						[method]('/bar')
 						.expect(200)
-						.expect(shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(1))
 						.expect(body)
 						.end(cb)
 				})
 
 				it('should support regexp path', (_, done) => {
-					const cb = after(3, done)
+					const cb = Utils.after(3, done)
 					const router = new Router()
-					const server = createServer(router)
+					const server = Utils.createServer(router)
 
-					router[method](/^\/[a-z]oo$/, createHitHandle(1), helloWorld)
+					router[method](/^\/[a-z]oo$/, Utils.createHitHandle(1), helloWorld)
 
-					request(server)[method]('/').expect(404).expect(shouldNotHitHandle(1)).end(cb)
+					Utils.request(server)[method]('/').expect(404).expect(Utils.shouldNotHitHandle(1)).end(cb)
 
-					request(server)
+					Utils.request(server)
 						[method]('/foo')
 						.expect(200)
-						.expect(shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(1))
 						.expect(body)
 						.end(cb)
 
-					request(server)
+					Utils.request(server)
 						[method]('/zoo')
 						.expect(200)
-						.expect(shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(1))
 						.expect(body)
 						.end(cb)
 				})
 
 				it('should support parameterized path', (_, done) => {
-					const cb = after(4, done)
+					const cb = Utils.after(4, done)
 					const router = new Router()
-					const server = createServer(router)
+					const server = Utils.createServer(router)
 
-					router[method]('/:thing', createHitHandle(1), helloWorld)
+					router[method]('/:thing', Utils.createHitHandle(1), helloWorld)
 
-					request(server)[method]('/').expect(404).expect(shouldNotHitHandle(1)).end(cb)
+					Utils.request(server)[method]('/').expect(404).expect(Utils.shouldNotHitHandle(1)).end(cb)
 
-					request(server)
+					Utils.request(server)
 						[method]('/foo')
 						.expect(200)
-						.expect(shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(1))
 						.expect(body)
 						.end(cb)
 
-					request(server)
+					Utils.request(server)
 						[method]('/bar')
 						.expect(200)
-						.expect(shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(1))
 						.expect(body)
 						.end(cb)
 
-					request(server)[method]('/foo/bar').expect(404).expect(shouldNotHitHandle(1)).end(cb)
+					Utils.request(server)
+						[method]('/foo/bar')
+						.expect(404)
+						.expect(Utils.shouldNotHitHandle(1))
+						.end(cb)
 				})
 
 				it('should accept multiple arguments', (_, done) => {
 					const router = new Router()
-					const server = createServer(router)
+					const server = Utils.createServer(router)
 
-					router[method]('/', createHitHandle(1), createHitHandle(2), helloWorld)
+					router[method]('/', Utils.createHitHandle(1), Utils.createHitHandle(2), helloWorld)
 
-					request(server)
+					Utils.request(server)
 						[method]('/')
 						.expect(200)
-						.expect(shouldHitHandle(1))
-						.expect(shouldHitHandle(2))
+						.expect(Utils.shouldHitHandle(1))
+						.expect(Utils.shouldHitHandle(2))
 						.expect(body)
 						.end(done)
 				})
@@ -344,40 +344,40 @@ describe('Router', () => {
 				describe('req.baseUrl', () => {
 					it('should be empty', (_, done) => {
 						const router = new Router()
-						const server = createServer(router)
+						const server = Utils.createServer(router)
 
 						router[method]('/foo', function handle(req, res) {
 							res.setHeader('x-url-base', JSON.stringify(req.baseUrl))
 							res.end()
 						})
 
-						request(server)[method]('/foo').expect('x-url-base', '""').expect(200, done)
+						Utils.request(server)[method]('/foo').expect('x-url-base', '""').expect(200, done)
 					})
 				})
 
 				describe('req.route', () => {
 					it('should be a Route', (_, done) => {
 						const router = new Router()
-						const server = createServer(router)
+						const server = Utils.createServer(router)
 
 						router[method]('/foo', function handle(req, res) {
 							res.setHeader('x-is-route', String(req.route instanceof Router.Route))
 							res.end()
 						})
 
-						request(server)[method]('/foo').expect('x-is-route', 'true').expect(200, done)
+						Utils.request(server)[method]('/foo').expect('x-is-route', 'true').expect(200, done)
 					})
 
 					it('should be the matched route', (_, done) => {
 						const router = new Router()
-						const server = createServer(router)
+						const server = Utils.createServer(router)
 
 						router[method]('/foo', function handle(req, res) {
 							res.setHeader('x-is-route', String(req.route.path === '/foo'))
 							res.end()
 						})
 
-						request(server)[method]('/foo').expect('x-is-route', 'true').expect(200, done)
+						Utils.request(server)[method]('/foo').expect('x-is-route', 'true').expect(200, done)
 					})
 				})
 			})
@@ -386,120 +386,129 @@ describe('Router', () => {
 	describe('.use(...fn)', () => {
 		it('should reject missing functions', () => {
 			const router = new Router()
-			assert.throws(router.use.bind(router), /argument handler is required/)
+			Utils.assert.throws(router.use.bind(router), /argument handler is required/)
 		})
 
 		it('should reject empty array', () => {
 			const router = new Router()
-			assert.throws(router.use.bind(router, []), /argument handler is required/)
+			Utils.assert.throws(router.use.bind(router, []), /argument handler is required/)
 		})
 
 		it('should reject non-functions', () => {
 			const router = new Router()
-			assert.throws(router.use.bind(router, '/', 'hello'), /argument handler must be a function/)
-			assert.throws(router.use.bind(router, '/', 5), /argument handler must be a function/)
-			assert.throws(router.use.bind(router, '/', null), /argument handler must be a function/)
-			assert.throws(router.use.bind(router, '/', new Date()), /argument handler must be a function/)
+			Utils.assert.throws(
+				router.use.bind(router, '/', 'hello'),
+				/argument handler must be a function/,
+			)
+			Utils.assert.throws(router.use.bind(router, '/', 5), /argument handler must be a function/)
+			Utils.assert.throws(router.use.bind(router, '/', null), /argument handler must be a function/)
+			Utils.assert.throws(
+				router.use.bind(router, '/', new Date()),
+				/argument handler must be a function/,
+			)
 		})
 
 		it('should be chainable', () => {
 			const router = new Router()
-			assert.equal(router.use(helloWorld), router)
+			Utils.assert.equal(router.use(helloWorld), router)
 		})
 
 		it('should invoke function for all requests', (_, done) => {
-			const cb = after(4, done)
+			const cb = Utils.after(4, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use(saw)
 
-			request(server).get('/').expect(200, 'saw GET /', cb)
+			Utils.request(server).get('/').expect(200, 'saw GET /', cb)
 
-			request(server).put('/').expect(200, 'saw PUT /', cb)
+			Utils.request(server).put('/').expect(200, 'saw PUT /', cb)
 
-			request(server).post('/foo').expect(200, 'saw POST /foo', cb)
+			Utils.request(server).post('/foo').expect(200, 'saw POST /foo', cb)
 
-			rawrequest(server).options('*').expect(200, 'saw OPTIONS *', cb)
+			Utils.rawrequest(server).options('*').expect(200, 'saw OPTIONS *', cb)
 		})
 
 		it('should not invoke for blank URLs', (_, done) => {
 			const router = new Router()
-			const server = createServer((req, res, next) => {
+			const server = Utils.createServer((req, res, next) => {
 				req.url = ''
 				router(req, res, next)
 			})
 
 			router.use(saw)
 
-			request(server).get('/').expect(404, done)
+			Utils.request(server).get('/').expect(404, done)
 		})
 
 		it('should support another router', (_, done) => {
 			const inner = new Router()
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			inner.use(saw)
 			router.use(inner)
 
-			request(server).get('/').expect(200, 'saw GET /', done)
+			Utils.request(server).get('/').expect(200, 'saw GET /', done)
 		})
 
 		it('should accept multiple arguments', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.use(createHitHandle(1), createHitHandle(2), helloWorld)
+			router.use(Utils.createHitHandle(1), Utils.createHitHandle(2), helloWorld)
 
-			request(server)
+			Utils.request(server)
 				.get('/')
-				.expect(shouldHitHandle(1))
-				.expect(shouldHitHandle(2))
+				.expect(Utils.shouldHitHandle(1))
+				.expect(Utils.shouldHitHandle(2))
 				.expect(200, 'hello, world', done)
 		})
 
 		it('should accept single array of middleware', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.use([createHitHandle(1), createHitHandle(2), helloWorld])
+			router.use([Utils.createHitHandle(1), Utils.createHitHandle(2), helloWorld])
 
-			request(server)
+			Utils.request(server)
 				.get('/')
-				.expect(shouldHitHandle(1))
-				.expect(shouldHitHandle(2))
+				.expect(Utils.shouldHitHandle(1))
+				.expect(Utils.shouldHitHandle(2))
 				.expect(200, 'hello, world', done)
 		})
 
 		it('should accept nested arrays of middleware', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.use([[createHitHandle(1), createHitHandle(2)], createHitHandle(3)], helloWorld)
+			router.use(
+				[[Utils.createHitHandle(1), Utils.createHitHandle(2)], Utils.createHitHandle(3)],
+				helloWorld,
+			)
 
-			request(server)
+			Utils.request(server)
 				.get('/')
-				.expect(shouldHitHandle(1))
-				.expect(shouldHitHandle(2))
-				.expect(shouldHitHandle(3))
+				.expect(Utils.shouldHitHandle(1))
+				.expect(Utils.shouldHitHandle(2))
+				.expect(Utils.shouldHitHandle(3))
 				.expect(200, 'hello, world', done)
 		})
 
 		it('should not invoke singular error function', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use((err, req, res, next) => {
 				throw new Error('boom!')
 			})
 
-			request(server).get('/').expect(404, done)
+			Utils.request(server).get('/').expect(404, done)
 		})
 
 		it('should not stack overflow with a large sync stack', { timeout: 5000 }, (_, done): void => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			for (let i = 0; i < 6000; i++) {
 				router.use((_req, _res, next) => {
@@ -509,13 +518,13 @@ describe('Router', () => {
 
 			router.use(helloWorld)
 
-			request(server).get('/').expect(200, 'hello, world', done)
+			Utils.request(server).get('/').expect(200, 'hello, world', done)
 		})
 
 		describe('error handling', () => {
 			it('should invoke error function after next(err)', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use((req, res, next) => {
 					next(new Error('boom!'))
@@ -523,12 +532,12 @@ describe('Router', () => {
 
 				router.use(sawError)
 
-				request(server).get('/').expect(200, 'saw Error: boom!', done)
+				Utils.request(server).get('/').expect(200, 'saw Error: boom!', done)
 			})
 
 			it('should invoke error function after throw err', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use(function handle(req, res, next) {
 					throw new Error('boom!')
@@ -536,12 +545,12 @@ describe('Router', () => {
 
 				router.use(sawError)
 
-				request(server).get('/').expect(200, 'saw Error: boom!', done)
+				Utils.request(server).get('/').expect(200, 'saw Error: boom!', done)
 			})
 
 			it('should not invoke error functions above function', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use(sawError)
 
@@ -549,14 +558,14 @@ describe('Router', () => {
 					throw new Error('boom!')
 				})
 
-				request(server).get('/').expect(500, done)
+				Utils.request(server).get('/').expect(500, done)
 			})
 		})
 
 		describe('next("route")', () => {
 			it('should invoke next handler', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use(function handle(req, res, next) {
 					res.setHeader('x-next', 'route')
@@ -565,31 +574,31 @@ describe('Router', () => {
 
 				router.use(saw)
 
-				request(server).get('/').expect('x-next', 'route').expect(200, 'saw GET /', done)
+				Utils.request(server).get('/').expect('x-next', 'route').expect(200, 'saw GET /', done)
 			})
 
 			it('should invoke next function', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				function goNext(req, res, next) {
 					res.setHeader('x-next', 'route')
 					next('route')
 				}
 
-				router.use(createHitHandle(1), goNext, createHitHandle(2), saw)
+				router.use(Utils.createHitHandle(1), goNext, Utils.createHitHandle(2), saw)
 
-				request(server)
+				Utils.request(server)
 					.get('/')
-					.expect(shouldHitHandle(1))
+					.expect(Utils.shouldHitHandle(1))
 					.expect('x-next', 'route')
-					.expect(shouldHitHandle(2))
+					.expect(Utils.shouldHitHandle(2))
 					.expect(200, 'saw GET /', done)
 			})
 
 			it('should not invoke error handlers', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use((_, res, next) => {
 					res.setHeader('x-next', 'route')
@@ -598,33 +607,33 @@ describe('Router', () => {
 
 				router.use(sawError)
 
-				request(server).get('/').expect('x-next', 'route').expect(404, done)
+				Utils.request(server).get('/').expect('x-next', 'route').expect(404, done)
 			})
 		})
 
 		describe('next("router")', () => {
 			it('should exit the router', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				function handle(req, res, next) {
 					res.setHeader('x-next', 'router')
 					next('router')
 				}
 
-				router.use(handle, createHitHandle(1))
+				router.use(handle, Utils.createHitHandle(1))
 				router.use(saw)
 
-				request(server)
+				Utils.request(server)
 					.get('/')
 					.expect('x-next', 'router')
-					.expect(shouldNotHitHandle(1))
+					.expect(Utils.shouldNotHitHandle(1))
 					.expect(404, done)
 			})
 
 			it('should not invoke error handlers', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use((_, res, next) => {
 					res.setHeader('x-next', 'router')
@@ -633,18 +642,18 @@ describe('Router', () => {
 
 				router.use(sawError)
 
-				request(server).get('/').expect('x-next', 'router').expect(404, done)
+				Utils.request(server).get('/').expect('x-next', 'router').expect(404, done)
 			})
 		})
 
 		describe('req.baseUrl', () => {
 			it('should be empty', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use(sawBase)
 
-				request(server).get('/foo/bar').expect(200, 'saw ', done)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw ', done)
 			})
 		})
 	})
@@ -652,201 +661,201 @@ describe('Router', () => {
 	describe('.use(path, ...fn)', () => {
 		it('should be chainable', () => {
 			const router = new Router()
-			assert.equal(router.use('/', helloWorld), router)
+			Utils.assert.equal(router.use('/', helloWorld), router)
 		})
 
 		it('should invoke when req.url starts with path', (_, done) => {
-			const cb = after(3, done)
+			const cb = Utils.after(3, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use('/foo', saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).post('/foo').expect(200, 'saw POST /', cb)
+			Utils.request(server).post('/foo').expect(200, 'saw POST /', cb)
 
-			request(server).post('/foo/bar').expect(200, 'saw POST /bar', cb)
+			Utils.request(server).post('/foo/bar').expect(200, 'saw POST /bar', cb)
 		})
 
 		it('should match if path has trailing slash', (_, done) => {
-			const cb = after(3, done)
+			const cb = Utils.after(3, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use('/foo/', saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).post('/foo').expect(200, 'saw POST /', cb)
+			Utils.request(server).post('/foo').expect(200, 'saw POST /', cb)
 
-			request(server).post('/foo/bar').expect(200, 'saw POST /bar', cb)
+			Utils.request(server).post('/foo/bar').expect(200, 'saw POST /bar', cb)
 		})
 
 		it('should support array of paths', (_, done) => {
-			const cb = after(3, done)
+			const cb = Utils.after(3, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use(['/foo/', '/bar'], saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).get('/foo').expect(200, 'saw GET /', cb)
+			Utils.request(server).get('/foo').expect(200, 'saw GET /', cb)
 
-			request(server).get('/bar').expect(200, 'saw GET /', cb)
+			Utils.request(server).get('/bar').expect(200, 'saw GET /', cb)
 		})
 
 		it('should support regexp path', (_, done) => {
-			const cb = after(5, done)
+			const cb = Utils.after(5, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use(/^\/[a-z]oo/, saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).get('/foo').expect(200, 'saw GET /', cb)
+			Utils.request(server).get('/foo').expect(200, 'saw GET /', cb)
 
-			request(server).get('/fooo').expect(404, cb)
+			Utils.request(server).get('/fooo').expect(404, cb)
 
-			request(server).get('/zoo/bear').expect(200, 'saw GET /bear', cb)
+			Utils.request(server).get('/zoo/bear').expect(200, 'saw GET /bear', cb)
 
-			request(server).get('/get/zoo').expect(404, cb)
+			Utils.request(server).get('/get/zoo').expect(404, cb)
 		})
 
 		it('should ensure regexp matches path prefix', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.use(/\/api.*/, createHitHandle(1))
-			router.use(/api/, createHitHandle(2))
-			router.use(/\/test/, createHitHandle(3))
+			router.use(/\/api.*/, Utils.createHitHandle(1))
+			router.use(/api/, Utils.createHitHandle(2))
+			router.use(/\/test/, Utils.createHitHandle(3))
 			router.use(helloWorld)
 
-			request(server)
+			Utils.request(server)
 				.get('/test/api/1234')
-				.expect(shouldNotHitHandle(1))
-				.expect(shouldNotHitHandle(2))
-				.expect(shouldHitHandle(3))
+				.expect(Utils.shouldNotHitHandle(1))
+				.expect(Utils.shouldNotHitHandle(2))
+				.expect(Utils.shouldHitHandle(3))
 				.expect(200, done)
 		})
 
 		it('should support parameterized path', (_, done) => {
-			const cb = after(4, done)
+			const cb = Utils.after(4, done)
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
 			router.use('/:thing', saw)
 
-			request(server).get('/').expect(404, cb)
+			Utils.request(server).get('/').expect(404, cb)
 
-			request(server).get('/foo').expect(200, 'saw GET /', cb)
+			Utils.request(server).get('/foo').expect(200, 'saw GET /', cb)
 
-			request(server).get('/bar').expect(200, 'saw GET /', cb)
+			Utils.request(server).get('/bar').expect(200, 'saw GET /', cb)
 
-			request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
+			Utils.request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
 		})
 
 		it('should accept multiple arguments', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.use('/foo', createHitHandle(1), createHitHandle(2), helloWorld)
+			router.use('/foo', Utils.createHitHandle(1), Utils.createHitHandle(2), helloWorld)
 
-			request(server)
+			Utils.request(server)
 				.get('/foo')
-				.expect(shouldHitHandle(1))
-				.expect(shouldHitHandle(2))
+				.expect(Utils.shouldHitHandle(1))
+				.expect(Utils.shouldHitHandle(2))
 				.expect(200, 'hello, world', done)
 		})
 
 		describe('with "caseSensitive" option', () => {
 			it('should not match paths case-sensitively by default', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
 
-				request(server).get('/FOO/bar').expect(200, 'saw GET /bar', cb)
+				Utils.request(server).get('/FOO/bar').expect(200, 'saw GET /bar', cb)
 
-				request(server).get('/FOO/BAR').expect(200, 'saw GET /BAR', cb)
+				Utils.request(server).get('/FOO/BAR').expect(200, 'saw GET /BAR', cb)
 			})
 
 			it('should not match paths case-sensitively when false', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router({ caseSensitive: false })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
 
-				request(server).get('/FOO/bar').expect(200, 'saw GET /bar', cb)
+				Utils.request(server).get('/FOO/bar').expect(200, 'saw GET /bar', cb)
 
-				request(server).get('/FOO/BAR').expect(200, 'saw GET /BAR', cb)
+				Utils.request(server).get('/FOO/BAR').expect(200, 'saw GET /BAR', cb)
 			})
 
 			it('should match paths case-sensitively when true', (_, done) => {
-				const cb = after(3, done)
+				const cb = Utils.after(3, done)
 				const router = new Router({ caseSensitive: true })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /bar', cb)
 
-				request(server).get('/FOO/bar').expect(404, cb)
+				Utils.request(server).get('/FOO/bar').expect(404, cb)
 
-				request(server).get('/FOO/BAR').expect(404, cb)
+				Utils.request(server).get('/FOO/BAR').expect(404, cb)
 			})
 		})
 
 		describe('with "strict" option', () => {
 			it('should accept optional trailing slashes by default', (_, done) => {
-				const cb = after(2, done)
+				const cb = Utils.after(2, done)
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo').expect(200, 'saw GET /', cb)
+				Utils.request(server).get('/foo').expect(200, 'saw GET /', cb)
 
-				request(server).get('/foo/').expect(200, 'saw GET /', cb)
+				Utils.request(server).get('/foo/').expect(200, 'saw GET /', cb)
 			})
 
 			it('should accept optional trailing slashes when false', (_, done) => {
-				const cb = after(2, done)
+				const cb = Utils.after(2, done)
 				const router = new Router({ strict: false })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo').expect(200, 'saw GET /', cb)
+				Utils.request(server).get('/foo').expect(200, 'saw GET /', cb)
 
-				request(server).get('/foo/').expect(200, 'saw GET /', cb)
+				Utils.request(server).get('/foo/').expect(200, 'saw GET /', cb)
 			})
 
 			it('should accept optional trailing slashes when true', (_, done) => {
-				const cb = after(2, done)
+				const cb = Utils.after(2, done)
 				const router = new Router({ strict: true })
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo').expect(200, 'saw GET /', cb)
+				Utils.request(server).get('/foo').expect(200, 'saw GET /', cb)
 
-				request(server).get('/foo/').expect(200, 'saw GET /', cb)
+				Utils.request(server).get('/foo/').expect(200, 'saw GET /', cb)
 			})
 		})
 
 		describe('next("route")', () => {
 			it('should invoke next handler', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', function handle(req, res, next) {
 					res.setHeader('x-next', 'route')
@@ -855,25 +864,25 @@ describe('Router', () => {
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo').expect('x-next', 'route').expect(200, 'saw GET /', done)
+				Utils.request(server).get('/foo').expect('x-next', 'route').expect(200, 'saw GET /', done)
 			})
 
 			it('should invoke next function', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				function goNext(req, res, next) {
 					res.setHeader('x-next', 'route')
 					next('route')
 				}
 
-				router.use('/foo', createHitHandle(1), goNext, createHitHandle(2), saw)
+				router.use('/foo', Utils.createHitHandle(1), goNext, Utils.createHitHandle(2), saw)
 
-				request(server)
+				Utils.request(server)
 					.get('/foo')
-					.expect(shouldHitHandle(1))
+					.expect(Utils.shouldHitHandle(1))
 					.expect('x-next', 'route')
-					.expect(shouldHitHandle(2))
+					.expect(Utils.shouldHitHandle(2))
 					.expect(200, 'saw GET /', done)
 			})
 		})
@@ -881,27 +890,27 @@ describe('Router', () => {
 		describe('req.baseUrl', () => {
 			it('should contain the stripped path', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', sawBase)
 
-				request(server).get('/foo/bar').expect(200, 'saw /foo', done)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw /foo', done)
 			})
 
 			it('should contain the stripped path for multiple levels', (_, done) => {
 				const router1 = new Router()
 				const router2 = new Router()
-				const server = createServer(router1)
+				const server = Utils.createServer(router1)
 
 				router1.use('/foo', router2)
 				router2.use('/bar', sawBase)
 
-				request(server).get('/foo/bar/baz').expect(200, 'saw /foo/bar', done)
+				Utils.request(server).get('/foo/bar/baz').expect(200, 'saw /foo/bar', done)
 			})
 
 			it('should be altered correctly', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 				const sub1 = new Router()
 				const sub2 = new Router()
 				const sub3 = new Router()
@@ -920,7 +929,7 @@ describe('Router', () => {
 				router.use(setsawBase(5))
 				router.use(helloWorld)
 
-				request(server)
+				Utils.request(server)
 					.get('/foo/bar/baz/zed')
 					.expect('x-saw-base-1', '/foo/bar/baz')
 					.expect('x-saw-base-2', '/foo')
@@ -934,21 +943,21 @@ describe('Router', () => {
 		describe('req.url', () => {
 			it('should strip path from req.url', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', saw)
 
-				request(server).get('/foo/bar').expect(200, 'saw GET /bar', done)
+				Utils.request(server).get('/foo/bar').expect(200, 'saw GET /bar', done)
 			})
 
 			it('should restore req.url after stripping', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', setsaw(1))
 				router.use(saw)
 
-				request(server)
+				Utils.request(server)
 					.get('/foo/bar')
 					.expect('x-saw-1', 'GET /bar')
 					.expect(200, 'saw GET /foo/bar', done)
@@ -956,12 +965,15 @@ describe('Router', () => {
 
 			it('should strip/restore with trailing stash', (_, done) => {
 				const router = new Router()
-				const server = createServer(router)
+				const server = Utils.createServer(router)
 
 				router.use('/foo', setsaw(1))
 				router.use(saw)
 
-				request(server).get('/foo/').expect('x-saw-1', 'GET /').expect(200, 'saw GET /foo/', done)
+				Utils.request(server)
+					.get('/foo/')
+					.expect('x-saw-1', 'GET /')
+					.expect(200, 'saw GET /foo/', done)
 			})
 		})
 	})
@@ -969,47 +981,47 @@ describe('Router', () => {
 	describe('request rewriting', () => {
 		it('should support altering req.method', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.put('/foo', createHitHandle(1))
-			router.post('/foo', createHitHandle(2), (req, _, next) => {
+			router.put('/foo', Utils.createHitHandle(1))
+			router.post('/foo', Utils.createHitHandle(2), (req, _, next) => {
 				req.method = 'PUT'
 				next()
 			})
 
-			router.post('/foo', createHitHandle(3))
-			router.put('/foo', createHitHandle(4))
+			router.post('/foo', Utils.createHitHandle(3))
+			router.put('/foo', Utils.createHitHandle(4))
 			router.use(saw)
 
-			request(server)
+			Utils.request(server)
 				.post('/foo')
-				.expect(shouldNotHitHandle(1))
-				.expect(shouldHitHandle(2))
-				.expect(shouldNotHitHandle(3))
-				.expect(shouldHitHandle(4))
+				.expect(Utils.shouldNotHitHandle(1))
+				.expect(Utils.shouldHitHandle(2))
+				.expect(Utils.shouldNotHitHandle(3))
+				.expect(Utils.shouldHitHandle(4))
 				.expect(200, 'saw PUT /foo', done)
 		})
 
 		it('should support altering req.url', (_, done) => {
 			const router = new Router()
-			const server = createServer(router)
+			const server = Utils.createServer(router)
 
-			router.get('/bar', createHitHandle(1))
-			router.get('/foo', createHitHandle(2), (req, _, next) => {
+			router.get('/bar', Utils.createHitHandle(1))
+			router.get('/foo', Utils.createHitHandle(2), (req, _, next) => {
 				req.url = '/bar'
 				next()
 			})
 
-			router.get('/foo', createHitHandle(3))
-			router.get('/bar', createHitHandle(4))
+			router.get('/foo', Utils.createHitHandle(3))
+			router.get('/bar', Utils.createHitHandle(4))
 			router.use(saw)
 
-			request(server)
+			Utils.request(server)
 				.get('/foo')
-				.expect(shouldNotHitHandle(1))
-				.expect(shouldHitHandle(2))
-				.expect(shouldNotHitHandle(3))
-				.expect(shouldHitHandle(4))
+				.expect(Utils.shouldNotHitHandle(1))
+				.expect(Utils.shouldHitHandle(2))
+				.expect(Utils.shouldNotHitHandle(3))
+				.expect(Utils.shouldHitHandle(4))
 				.expect(200, 'saw GET /bar', done)
 		})
 	})
