@@ -187,6 +187,7 @@ export function after<T>(
 	errorCallback: (...args: unknown[]) => void = () => {},
 ) {
 	let bail = false
+	let fn = callback
 	proxy.count = count
 
 	function proxy(err: null | Error, data: undefined | T): void {
@@ -198,17 +199,15 @@ export function after<T>(
 		// after first error, rest are passed to errorCallback
 		if (err) {
 			bail = true
-			callback(err)
+			fn(err)
 			// future error callbacks will go to error handler
-			callback = errorCallback
+			fn = errorCallback
 		} else if (proxy.count === 0 && !bail) {
-			callback(null, data)
+			fn(null, data)
 		}
 	}
 
-	return count === 0
-		? callback() //
-		: proxy
+	return count === 0 ? fn() : proxy
 }
 
 export { assert }
