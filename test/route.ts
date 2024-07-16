@@ -111,9 +111,7 @@ describe('Router', () => {
 			request(server).get('/foo').expect(404, done)
 		})
 
-		it('should not stack overflow with a large sync stack', function (done) {
-			this.timeout(5000) // long-running test
-
+		it('should not stack overflow with a large sync stack', { timeout: 5000 }, (_, done) => {
 			const router = new Router()
 			const route = router.route('/foo')
 			const server = createServer(router)
@@ -148,7 +146,7 @@ describe('Router', () => {
 				assert.throws(route.all.bind(route, 2), /argument handler must be a function/)
 			})
 
-			it('should respond to all methods', (done) => {
+			it('should respond to all methods', (_, done) => {
 				const cb = after(3, done)
 				const router = new Router()
 				const route = router.route('/foo')
@@ -163,7 +161,7 @@ describe('Router', () => {
 				request(server).put('/foo').expect(200, 'saw PUT /foo', cb)
 			})
 
-			it('should accept multiple arguments', (done) => {
+			it('should accept multiple arguments', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -177,7 +175,7 @@ describe('Router', () => {
 					.expect(200, 'hello, world', done)
 			})
 
-			it('should accept single array of handlers', (done) => {
+			it('should accept single array of handlers', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -191,7 +189,7 @@ describe('Router', () => {
 					.expect(200, 'hello, world', done)
 			})
 
-			it('should accept nested arrays of handlers', (done) => {
+			it('should accept nested arrays of handlers', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -223,7 +221,7 @@ describe('Router', () => {
 						: shouldNotHaveBody()
 
 				describe(`.${method}(...fn)`, () => {
-					it(`should respond to a ${method.toUpperCase()} request`, (done) => {
+					it(`should respond to a ${method.toUpperCase()} request`, (_, done) => {
 						const router = new Router()
 						const route = router.route('/')
 						const server = createServer(router)
@@ -251,7 +249,7 @@ describe('Router', () => {
 						assert.throws(route[method].bind(route, 2), /argument handler must be a function/)
 					})
 
-					it('should accept multiple arguments', (done) => {
+					it('should accept multiple arguments', (_, done) => {
 						const router = new Router()
 						const route = router.route('/foo')
 						const server = createServer(router)
@@ -267,7 +265,7 @@ describe('Router', () => {
 							.end(done)
 					})
 
-					it('should accept single array of handlers', (done) => {
+					it('should accept single array of handlers', (_, done) => {
 						const router = new Router()
 						const route = router.route('/foo')
 						const server = createServer(router)
@@ -283,7 +281,7 @@ describe('Router', () => {
 							.end(done)
 					})
 
-					it('should accept nested arrays of handlers', (done) => {
+					it('should accept nested arrays of handlers', (_, done) => {
 						const router = new Router()
 						const route = router.route('/foo')
 						const server = createServer(router)
@@ -306,7 +304,7 @@ describe('Router', () => {
 			})
 
 		describe('error handling', () => {
-			it('should handle errors from next(err)', (done) => {
+			it('should handle errors from next(err)', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -325,7 +323,7 @@ describe('Router', () => {
 				request(server).get('/foo').expect(500, 'caught: boom!', done)
 			})
 
-			it('should handle errors thrown', (done) => {
+			it('should handle errors thrown', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -344,7 +342,7 @@ describe('Router', () => {
 				request(server).get('/foo').expect(500, 'caught: boom!', done)
 			})
 
-			it('should handle errors thrown in error handlers', (done) => {
+			it('should handle errors thrown in error handlers', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -367,7 +365,7 @@ describe('Router', () => {
 		})
 
 		describe('next("route")', () => {
-			it('should invoke next handler', (done) => {
+			it('should invoke next handler', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -382,7 +380,7 @@ describe('Router', () => {
 				request(server).get('/foo').expect('x-next', 'route').expect(200, 'saw GET /foo', done)
 			})
 
-			it('should invoke next route', (done) => {
+			it('should invoke next route', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -397,7 +395,7 @@ describe('Router', () => {
 				request(server).get('/foo').expect('x-next', 'route').expect(200, 'saw GET /foo', done)
 			})
 
-			it('should skip next handlers in route', (done) => {
+			it('should skip next handlers in route', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -419,7 +417,7 @@ describe('Router', () => {
 					.expect(200, 'saw GET /foo', done)
 			})
 
-			it('should not invoke error handlers', (done) => {
+			it('should not invoke error handlers', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -439,7 +437,7 @@ describe('Router', () => {
 		})
 
 		describe('next("router")', () => {
-			it('should exit the router', (done) => {
+			it('should exit the router', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -460,7 +458,7 @@ describe('Router', () => {
 					.expect(404, done)
 			})
 
-			it('should not invoke error handlers', (done) => {
+			it('should not invoke error handlers', (_, done) => {
 				const router = new Router()
 				const route = router.route('/foo')
 				const server = createServer(router)
@@ -486,7 +484,7 @@ describe('Router', () => {
 
 		describe('path', () => {
 			describe('using ":name"', () => {
-				it('should name a capture group', (done) => {
+				it('should name a capture group', (_, done) => {
 					const router = new Router()
 					const route = router.route('/:foo')
 					const server = createServer(router)
@@ -496,7 +494,7 @@ describe('Router', () => {
 					request(server).get('/bar').expect(200, { foo: 'bar' }, done)
 				})
 
-				it('should match single path segment', (done) => {
+				it('should match single path segment', (_, done) => {
 					const router = new Router()
 					const route = router.route('/:foo')
 					const server = createServer(router)
@@ -506,7 +504,7 @@ describe('Router', () => {
 					request(server).get('/bar/bar').expect(404, done)
 				})
 
-				it('should work multiple times', (done) => {
+				it('should work multiple times', (_, done) => {
 					const router = new Router()
 					const route = router.route('/:foo/:bar')
 					const server = createServer(router)
@@ -516,7 +514,7 @@ describe('Router', () => {
 					request(server).get('/fizz/buzz').expect(200, { foo: 'fizz', bar: 'buzz' }, done)
 				})
 
-				it('should work following a partial capture group', (done) => {
+				it('should work following a partial capture group', (_, done) => {
 					const cb = after(2, done)
 					const router = new Router()
 					const route = router.route('/user(s)?/:user/:op')
@@ -531,7 +529,7 @@ describe('Router', () => {
 						.expect(200, { '0': 's', user: 'tj', op: 'edit' }, cb)
 				})
 
-				it('should work inside literal parentheses', (done) => {
+				it('should work inside literal parentheses', (_, done) => {
 					const router = new Router()
 					const route = router.route('/:user\\(:op\\)')
 					const server = createServer(router)
@@ -541,7 +539,7 @@ describe('Router', () => {
 					request(server).get('/tj(edit)').expect(200, { user: 'tj', op: 'edit' }, done)
 				})
 
-				it('should work within arrays', (done) => {
+				it('should work within arrays', (_, done) => {
 					const cb = after(2, done)
 					const router = new Router()
 					const route = router.route(['/user/:user/poke', '/user/:user/pokes'])
@@ -556,7 +554,7 @@ describe('Router', () => {
 			})
 
 			describe('using "*"', () => {
-				it('should capture everything', (done) => {
+				it('should capture everything', (_, done) => {
 					const router = new Router()
 					const route = router.route('*')
 					const server = createServer(router)
@@ -566,7 +564,7 @@ describe('Router', () => {
 					request(server).get('/foo/bar/baz').expect(200, { '0': '/foo/bar/baz' }, done)
 				})
 
-				it('should decode the capture', (done) => {
+				it('should decode the capture', (_, done) => {
 					const router = new Router()
 					const route = router.route('*')
 					const server = createServer(router)
@@ -576,7 +574,7 @@ describe('Router', () => {
 					request(server).get('/foo/%20/baz').expect(200, { '0': '/foo/ /baz' }, done)
 				})
 
-				it('should capture everything with pre- and post-fixes', (done) => {
+				it('should capture everything with pre- and post-fixes', (_, done) => {
 					const router = new Router()
 					const route = router.route('/foo/*/bar')
 					const server = createServer(router)
@@ -586,7 +584,7 @@ describe('Router', () => {
 					request(server).get('/foo/1/2/3/bar').expect(200, { '0': '1/2/3' }, done)
 				})
 
-				it('should capture greedly', (done) => {
+				it('should capture greedly', (_, done) => {
 					const router = new Router()
 					const route = router.route('/foo/*/bar')
 					const server = createServer(router)
@@ -596,7 +594,7 @@ describe('Router', () => {
 					request(server).get('/foo/bar/bar/bar').expect(200, { '0': 'bar/bar' }, done)
 				})
 
-				it('should be an optional capture', (done) => {
+				it('should be an optional capture', (_, done) => {
 					const router = new Router()
 					const route = router.route('/foo*')
 					const server = createServer(router)
@@ -606,7 +604,7 @@ describe('Router', () => {
 					request(server).get('/foo').expect(200, { '0': '' }, done)
 				})
 
-				it('should require preceeding /', (done) => {
+				it('should require preceeding /', (_, done) => {
 					const cb = after(2, done)
 					const router = new Router()
 					const route = router.route('/foo/*')
@@ -619,7 +617,7 @@ describe('Router', () => {
 					request(server).get('/foo/').expect(200, cb)
 				})
 
-				it('should work in a named parameter', (done) => {
+				it('should work in a named parameter', (_, done) => {
 					const cb = after(2, done)
 					const router = new Router()
 					const route = router.route('/:foo(*)')
@@ -632,7 +630,7 @@ describe('Router', () => {
 					request(server).get('/fizz/buzz').expect(200, { '0': 'fizz/buzz', foo: 'fizz/buzz' }, cb)
 				})
 
-				it('should work before a named parameter', (done) => {
+				it('should work before a named parameter', (_, done) => {
 					const router = new Router()
 					const route = router.route('/*/user/:id')
 					const server = createServer(router)
@@ -642,7 +640,7 @@ describe('Router', () => {
 					request(server).get('/poke/user/42').expect(200, { '0': 'poke', id: '42' }, done)
 				})
 
-				it('should work within arrays', (done) => {
+				it('should work within arrays', (_, done) => {
 					const cb = after(3, done)
 					const router = new Router()
 					const route = router.route(['/user/:id', '/foo/*', '/:action'])
