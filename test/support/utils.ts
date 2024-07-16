@@ -5,7 +5,7 @@ import finalhandler from 'finalhandler'
 import { Buffer } from 'safe-buffer'
 export * as request from 'supertest'
 import { methods } from '../../src/methods'
-import Router from '../../src/router'
+import type Router from '../../src/router'
 import type * as Types from '../../src/types'
 
 export function createHitHandle(num: number): Types.RouteHandler {
@@ -165,6 +165,50 @@ function shouldNotHaveHeader(header: string): (res: Res) => void {
 	return (res) => {
 		assert.ok(!(header.toLowerCase() in res.headers), `should not have header ${header}`)
 	}
+}
+
+export function after<T>(count: 0, callback: () => void): void
+export function after<T, Cb extends () => void>(
+	count: number,
+	callback: () => void,
+): Cb & { readonly count: number }
+export function after<T, Cb extends (err: null | Error, data: undefined | T) => void>(
+	count: number,
+	callback: Cb,
+): Cb & { readonly count: number }
+export function after<
+	T,
+	Cb extends (err: null | Error, data: undefined | T) => void,
+	CbError extends (err: null | Error, data: undefined | T) => void,
+>(count: number, callback: Cb, errorCallback: CbError): Cb & { readonly count: number }
+export function after<T>(
+	count: number,
+	callback: (...args: unknown[]) => void,
+	errorCallback: (...args: unknown[]) => void = () => {},
+) {
+	let bail = false
+	proxy.count = count
+
+	function proxy(err: null | Error, data: undefined | T): void {
+		if (proxy.count <= 0) {
+			throw new Error('after called too many times')
+		}
+		--proxy.count
+
+		// after first error, rest are passed to errorCallback
+		if (err) {
+			bail = true
+			callback(err)
+			// future error callbacks will go to error handler
+			callback = errorCallback
+		} else if (proxy.count === 0 && !bail) {
+			callback(null, data)
+		}
+	}
+
+	return count === 0
+		? callback() //
+		: proxy
 }
 
 export { assert }
