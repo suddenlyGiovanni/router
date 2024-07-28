@@ -44,7 +44,7 @@ export default class Router implements Types.Router {
 	public get: Types.RouterMatcher<Router> = Router.makeMethodHandler('get')
 	public head: Types.RouterMatcher<Router> = Router.makeMethodHandler('head')
 	public lock: Types.RouterMatcher<Router> = Router.makeMethodHandler('lock')
-	public ['m-search']: Types.RouterMatcher<Router> = Router.makeMethodHandler('m-search')
+	public 'm-search': Types.RouterMatcher<Router> = Router.makeMethodHandler('m-search')
 	public merge: Types.RouterMatcher<Router> = Router.makeMethodHandler('merge')
 	public mkactivity: Types.RouterMatcher<Router> = Router.makeMethodHandler('mkactivity')
 	public mkcol: Types.RouterMatcher<Router> = Router.makeMethodHandler('mkcol')

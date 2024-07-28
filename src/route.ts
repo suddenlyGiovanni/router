@@ -15,7 +15,7 @@ export class Route implements Types.Route {
 	public get: Types.RouterHandler<Route> = Route.makeRouterHandler('get')
 	public head: Types.RouterHandler<Route> = Route.makeRouterHandler('head')
 	public lock: Types.RouterHandler<Route> = Route.makeRouterHandler('lock')
-	public ['m-search']: Types.RouterHandler<Route> = Route.makeRouterHandler('m-search')
+	public 'm-search': Types.RouterHandler<Route> = Route.makeRouterHandler('m-search')
 	public merge: Types.RouterHandler<Route> = Route.makeRouterHandler('merge')
 	public mkactivity: Types.RouterHandler<Route> = Route.makeRouterHandler('mkactivity')
 	public mkcol: Types.RouterHandler<Route> = Route.makeRouterHandler('mkcol')
