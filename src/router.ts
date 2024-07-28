@@ -334,9 +334,9 @@ export default class Router implements Types.Router {
 	 * @public
 	 */
 	public route(path: Types.PathParams): Route {
-		let route = new Route(path)
+		const route = new Route(path)
 
-		let layer = new Layer(
+		const layer = new Layer(
 			path,
 			{
 				sensitive: this.caseSensitive,
@@ -346,7 +346,11 @@ export default class Router implements Types.Router {
 			handle,
 		)
 
-		function handle(req, res, next) {
+		function handle(
+			req: Types.RoutedRequest,
+			res: Types.OutgoingMessage,
+			next: Types.NextFunction,
+		): void {
 			route.dispatch(req, res, next)
 		}
 
@@ -410,7 +414,7 @@ export default class Router implements Types.Router {
 			// add the middleware
 			debug('use %o %s', path, fn.name || '<anonymous>')
 
-			let layer = new Layer(
+			const layer = new Layer(
 				path,
 				{
 					sensitive: this.caseSensitive,
