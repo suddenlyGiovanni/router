@@ -289,7 +289,7 @@ export default class Router implements Types.Router {
 
 	public all(path: Types.PathParams, ...handlers: Types.RouterHandler<Router>[]): Router {
 		const route: Route = this.route(path)
-		route['all'].apply(route, handlers)
+		route.all.apply(route, handlers)
 		return this
 	}
 

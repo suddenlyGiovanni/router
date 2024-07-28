@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import { Buffer } from 'safe-buffer'
 
 import { methods } from '../src/methods'
-import Router from '../src/router'
+import Router, { Route } from '../src/router'
 import type * as Types from '../src/types'
 import * as Utils from './support/utils'
 
@@ -23,9 +23,10 @@ describe('Router', () => {
 		}, /argument callback is required/)
 	})
 
-	it.only('should invoke callback without "req.url"', (_, done) => {
+	it('should invoke callback without "req.url"', (_, done) => {
 		const router = new Router()
 		router.use(saw)
+		// @ts-expect-error
 		router.handle({}, {}, done)
 	})
 
@@ -227,12 +228,12 @@ describe('Router', () => {
 					: Utils.shouldNotHaveBody()
 
 			describe(`.${method}(path, ...fn)`, () => {
-				it('should be chainable', () => {
+				it.only('should be chainable', () => {
 					const router = new Router()
 					Utils.assert.equal(router[method]('/', helloWorld), router)
 				})
 
-				it(`should respond to a ${method.toUpperCase()} request`, (_, done) => {
+				it.only(`should respond to a "${method.toUpperCase()}" request`, (_, done) => {
 					const router = new Router()
 					const server = Utils.createServer(router)
 
@@ -241,15 +242,20 @@ describe('Router', () => {
 					Utils.request(server)[method]('/').expect(200).expect(body).end(done)
 				})
 
-				it('should reject invalid fn', () => {
+				it.only('should reject invalid fn', () => {
 					const router = new Router()
 					Utils.assert.throws(
-						router[method].bind(router, '/', 2),
+						router[method].bind(
+							router,
+							'/',
+							// @ts-expect-error testing invalid input
+							2,
+						),
 						/argument handler must be a function/,
 					)
 				})
 
-				it('should support array of paths', (_, done) => {
+				it.only('should support array of paths', (_, done) => {
 					const cb = Utils.after(3, done)
 					const router = new Router()
 					const server = Utils.createServer(router)
@@ -273,7 +279,7 @@ describe('Router', () => {
 						.end(cb)
 				})
 
-				it('should support regexp path', (_, done) => {
+				it.only('should support regexp path', (_, done) => {
 					const cb = Utils.after(3, done)
 					const router = new Router()
 					const server = Utils.createServer(router)
@@ -327,7 +333,7 @@ describe('Router', () => {
 						.end(cb)
 				})
 
-				it('should accept multiple arguments', (_, done) => {
+				it.only('should accept multiple arguments', (_, done) => {
 					const router = new Router()
 					const server = Utils.createServer(router)
 
@@ -343,7 +349,7 @@ describe('Router', () => {
 				})
 
 				describe('req.baseUrl', () => {
-					it('should be empty', (_, done) => {
+					it.only('should be empty', (_, done) => {
 						const router = new Router()
 						const server = Utils.createServer(router)
 
@@ -357,19 +363,19 @@ describe('Router', () => {
 				})
 
 				describe('req.route', () => {
-					it('should be a Route', (_, done) => {
+					it.only('should be a Route', (_, done) => {
 						const router = new Router()
 						const server = Utils.createServer(router)
 
 						router[method]('/foo', function handle(req, res) {
-							res.setHeader('x-is-route', String(req.route instanceof Router.Route))
+							res.setHeader('x-is-route', String(req.route instanceof Route))
 							res.end()
 						})
 
 						Utils.request(server)[method]('/foo').expect('x-is-route', 'true').expect(200, done)
 					})
 
-					it('should be the matched route', (_, done) => {
+					it.only('should be the matched route', (_, done) => {
 						const router = new Router()
 						const server = Utils.createServer(router)
 
@@ -1028,7 +1034,11 @@ describe('Router', () => {
 	})
 })
 
-function helloWorld(req, res): void {
+function helloWorld(
+	_req: Types.RoutedRequest,
+	res: Types.OutgoingMessage,
+	_next: Types.NextFunction,
+): void {
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')
 	res.end('hello, world')

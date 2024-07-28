@@ -34,7 +34,7 @@ describe('Router', () => {
 			const route = router.route('/foo')
 			const server = Utils.createServer((req, res, next) => {
 				req.method = undefined
-				router(req, res, next)
+				router.handle(req, res, next)
 			})
 
 			route.post(Utils.createHitHandle(1))
