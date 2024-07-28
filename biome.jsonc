@@ -9,7 +9,8 @@
 			"recommended": true,
 			"style": {
 				"noNonNullAssertion": "warn",
-				"noArguments": "warn"
+				"noArguments": "warn",
+				"useShorthandFunctionType": "off"
 			},
 			"complexity": {
 				"noBannedTypes": "info"
