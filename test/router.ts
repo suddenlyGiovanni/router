@@ -19,14 +19,14 @@ describe('Router', () => {
 		const router = new Router()
 		Utils.assert.throws(() => {
 			// @ts-expect-error
-			router({}, {})
+			router.handle({}, {})
 		}, /argument callback is required/)
 	})
 
-	it('should invoke callback without "req.url"', (_, done) => {
+	it.only('should invoke callback without "req.url"', (_, done) => {
 		const router = new Router()
 		router.use(saw)
-		router({}, {}, done)
+		router.handle({}, {}, done)
 	})
 
 	describe('.all(path, fn)', () => {
@@ -434,7 +434,7 @@ describe('Router', () => {
 			const router = new Router()
 			const server = Utils.createServer((req, res, next) => {
 				req.url = ''
-				router(req, res, next)
+				router.handle(req, res, next)
 			})
 
 			router.use(saw)

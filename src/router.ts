@@ -1,5 +1,5 @@
 import type * as http from 'node:http'
-import { œflatten as flatten } from 'array-flatten'
+import { flatten } from 'array-flatten/dist.es2015'
 import d from 'debug'
 import parseUrl from 'parseurl'
 import mixin from 'utils-merge'
@@ -398,14 +398,14 @@ export default class Router implements Types.Router {
 			}
 		}
 
-		let callbacks = flatten(slice.call(arguments, offset))
+		const callbacks = flatten(slice.call(arguments, offset))
 
 		if (callbacks.length === 0) {
 			throw new TypeError('argument handler is required')
 		}
 
 		for (let i = 0; i < callbacks.length; i++) {
-			let fn = callbacks[i]
+			const fn = callbacks[i]
 
 			if (typeof fn !== 'function') {
 				throw new TypeError('argument handler must be a function')
@@ -437,7 +437,7 @@ export default class Router implements Types.Router {
 	 *
 	 * @private
 	 */
-	private handle(
+	public handle(
 		req: Types.IncomingRequest,
 		res: Types.OutgoingMessage,
 		callback: Types.NextFunction,
