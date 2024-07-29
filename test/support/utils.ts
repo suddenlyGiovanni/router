@@ -162,6 +162,3 @@ function shouldNotHaveHeader(header: string): (res: Types.Response) => void {
 		assert.ok(!(header.toLowerCase() in res.headers), `should not have header ${header}`)
 	}
 }
-
-export { after } from './after'
-export { assert }
