@@ -244,7 +244,7 @@ describe('wrap', () => {
 
 	function testWrap(version: number, wrapStrategy: Wrap) {
 		describe(`wrap ${version.toString()} function behavior`, () => {
-			test('wrap returns a function', (t) => {
+			test('wrap returns a function', () => {
 				const proxy = wrapStrategy(
 					(number: number) => number,
 					(f, number) => {
