@@ -43,7 +43,7 @@ describe('Router', () => {
 			)
 		})
 
-		it('should map logic for a path param', (done) => {
+		it('should map logic for a path param', (_, done) => {
 			const cb = Utils.after(2, done)
 			const router = new Router()
 			const server = Utils.createServer(router)
@@ -63,7 +63,7 @@ describe('Router', () => {
 			Utils.request(server).get('/user/bob').expect(200, 'get user NaN', cb)
 		})
 
-		it('should allow chaining', (done) => {
+		it('should allow chaining', (_, done) => {
 			const router = new Router()
 			const server = Utils.createServer(router)
 
@@ -85,7 +85,7 @@ describe('Router', () => {
 			Utils.request(server).get('/user/2').expect(200, 'get user 2 (2)', done)
 		})
 
-		it('should automatically decode path value', (done) => {
+		it('should automatically decode path value', (_, done) => {
 			const router = new Router()
 			const server = Utils.createServer(router)
 
@@ -102,7 +102,7 @@ describe('Router', () => {
 			Utils.request(server).get('/user/%22bob%2Frobert%22').expect('get user "bob/robert"', done)
 		})
 
-		it('should 400 on invalid path value', (done) => {
+		it('should 400 on invalid path value', (_, done) => {
 			const router = new Router()
 			const server = Utils.createServer(router)
 
@@ -121,7 +121,7 @@ describe('Router', () => {
 				.expect(400, /URIError: Failed to decode param/, done)
 		})
 
-		it('should only invoke fn when necessary', (done) => {
+		it('should only invoke fn when necessary', (_, done) => {
 			const cb = Utils.after(2, done)
 			const router = new Router()
 			const server = Utils.createServer(router)
