@@ -1036,7 +1036,7 @@ describe('Router', () => {
 
 function helloWorld(
 	_req: Types.RoutedRequest,
-	res: Types.OutgoingMessage,
+	res: Types.ServerResponse,
 	_next: Types.NextFunction,
 ): void {
 	res.statusCode = 200
@@ -1044,7 +1044,7 @@ function helloWorld(
 	res.end('hello, world')
 }
 
-function setsaw(num: number): (req, res, next) => void {
+function setsaw(num: number): Types.RouteHandler {
 	const name = `x-saw-${String(num)}`
 	return function saw(req, res, next) {
 		res.setHeader(name, `${req.method} ${req.url}`)
@@ -1052,7 +1052,7 @@ function setsaw(num: number): (req, res, next) => void {
 	}
 }
 
-function setsawBase(num: number): (req, res, next) => void {
+function setsawBase(num: number): Types.RouteHandler {
 	const name = `x-saw-base-${String(num)}`
 	return function sawBase(req, res, next) {
 		res.setHeader(name, String(req.baseUrl))
@@ -1060,7 +1060,7 @@ function setsawBase(num: number): (req, res, next) => void {
 	}
 }
 
-function saw(req: Types.RoutedRequest, res: Types.OutgoingMessage): void {
+function saw(req: Types.RoutedRequest, res: Types.ServerResponse): void {
 	const msg = `saw ${req.method} ${req.url}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')
@@ -1070,7 +1070,7 @@ function saw(req: Types.RoutedRequest, res: Types.OutgoingMessage): void {
 function sawError(
 	err: any,
 	_req: Types.IncomingRequest,
-	res: Types.OutgoingMessage,
+	res: Types.ServerResponse,
 	_next: Types.NextFunction,
 ): void {
 	const msg = `saw ${err.name}: ${err.message}`
@@ -1079,7 +1079,7 @@ function sawError(
 	res.end(msg)
 }
 
-function sawBase(req, res): void {
+function sawBase(req: Types.RoutedRequest, res: Types.ServerResponse): void {
 	const msg = `saw ${req.baseUrl}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')

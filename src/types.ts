@@ -1,5 +1,5 @@
-import { type OutgoingMessage } from 'node:http'
-export type { OutgoingMessage }
+import { type OutgoingMessage, type ServerResponse } from 'node:http'
+export type { OutgoingMessage, ServerResponse }
 
 export type HttpMethods =
 	| 'checkout'
