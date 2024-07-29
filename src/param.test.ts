@@ -1,9 +1,9 @@
 import process from 'node:process'
 import { describe, it } from 'node:test'
 
-import Router from '../src/router'
-import type * as Types from '../src/types'
-import * as Utils from './support'
+import Router from './router'
+import type * as Types from './types'
+import * as Utils from '../test/support'
 
 describe('Router', () => {
 	describe('.param(name, fn)', () => {

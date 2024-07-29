@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
-// import Router from './router'
 
 describe('restore', () => {
 	function testRestore(version: number, restoreStrategy: Function) {
