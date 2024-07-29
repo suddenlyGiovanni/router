@@ -74,6 +74,46 @@ export default class Router implements Types.Router {
 		this.caseSensitive = options.caseSensitive
 		this.mergeParams = options.mergeParams
 		this.strict = options.strict
+
+		// return new Proxy(this, {
+		// 	apply: (target, _thisArg, argArray) => {
+		// 		return target.handle.apply(
+		// 			target,
+		// 			argArray as [
+		// 				req: Types.IncomingRequest,
+		// 				res: Types.OutgoingMessage,
+		// 				next: Types.NextFunction,
+		// 			],
+		// 		)
+		// 	},
+		// })
+	}
+
+	/**
+	 * Restore obj props after function
+	 *
+	 * @private
+	 * @internal
+	 */
+	public static restore<
+		Obj extends Record<string, any>,
+		Keys extends (keyof Obj)[],
+		Fn extends (...args: any[]) => any,
+	>(fn: Fn, obj: Obj, ...keys: [...Keys]): (...args: Parameters<Fn>) => ReturnType<Fn> {
+		const originalValues = keys.reduce(
+			(acc, key) => {
+				acc[key] = obj[key]
+				return acc
+			},
+			{} as Obj[Keys[number]],
+		)
+
+		return (...args) => {
+			for (const key of keys) {
+				obj[key] = originalValues[key]
+			}
+			return fn(...args)
+		}
 	}
 
 	/**
@@ -204,33 +244,6 @@ export default class Router implements Types.Router {
 	}
 
 	/**
-	 * Restore obj props after function
-	 *
-	 * @private
-	 * @internal
-	 */
-	public static restore<
-		Obj extends Record<string, any>,
-		Keys extends (keyof Obj)[],
-		Fn extends (...args: any[]) => any,
-	>(fn: Fn, obj: Obj, ...keys: [...Keys]): (...args: Parameters<Fn>) => ReturnType<Fn> {
-		const originalValues = keys.reduce(
-			(acc, key) => {
-				acc[key] = obj[key]
-				return acc
-			},
-			{} as Obj[Keys[number]],
-		)
-
-		return (...args) => {
-			for (const key of keys) {
-				obj[key] = originalValues[key]
-			}
-			return fn(...args)
-		}
-	}
-
-	/**
 	 * Send an OPTIONS response.
 	 *
 	 * @private
@@ -293,145 +306,6 @@ export default class Router implements Types.Router {
 		return this
 	}
 
-	public param(this: Router, name: string, handler: Types.RequestParamHandler): Router {
-		if (!name) {
-			throw new TypeError('argument name is required')
-		}
-
-		if (typeof name !== 'string') {
-			throw new TypeError('argument name must be a string')
-		}
-
-		if (!handler) {
-			throw new TypeError('argument fn is required')
-		}
-
-		if (typeof handler !== 'function') {
-			throw new TypeError('argument fn must be a function')
-		}
-
-		let params = this.params[name]
-
-		if (!params) {
-			params = this.params[name] = []
-		}
-
-		params.push(handler)
-
-		return this
-	}
-
-	/**
-	 * Create a new Route for the given path.
-	 *
-	 * Each route contains a separate middleware stack and VERB handlers.
-	 *
-	 * See the Route api documentation for details on adding handlers
-	 * and middleware to routes.
-	 *
-	 * @param {string} path
-	 * @return {Route}
-	 * @public
-	 */
-	public route(path: Types.PathParams): Route {
-		const route = new Route(path)
-
-		const layer = new Layer(
-			path,
-			{
-				sensitive: this.caseSensitive,
-				strict: this.strict,
-				end: true,
-			},
-			handle,
-		)
-
-		function handle(
-			req: Types.RoutedRequest,
-			res: Types.OutgoingMessage,
-			next: Types.NextFunction,
-		): void {
-			route.dispatch(req, res, next)
-		}
-
-		layer.route = route
-
-		this.stack.push(layer)
-		return route
-	}
-
-	/**
-	 * Use the given middleware function, with optional path, defaulting to "/".
-	 *
-	 * Use (like `.all`) will run for any http METHOD, but it will not add
-	 * handlers for those methods so OPTIONS requests will not consider `.use`
-	 * functions even if they could respond.
-	 *
-	 * The other difference is that _route_ path is stripped and not visible
-	 * to the handler function. The main effect of this feature is that mounted
-	 * handlers can operate without any code changes regardless of the "prefix"
-	 * pathname.
-	 *
-	 * @public
-	 */
-	public use(path: Types.PathParams, ...handlers: Types.RequestHandlerParams[]): Router
-	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
-	public use(...handlers: Types.RouteHandler[]): Router
-	public use(...handlers: Types.RequestHandlerParams[]): Router
-	public use(handler: unknown): Router {
-		let offset: number = 0
-		let path: string = '/'
-
-		// default path to '/'
-		// disambiguate router.use([handler])
-		if (typeof handler !== 'function') {
-			let arg = handler
-
-			while (Array.isArray(arg) && arg.length !== 0) {
-				arg = arg[0]
-			}
-
-			// first arg is the path
-			if (typeof arg !== 'function') {
-				offset = 1
-				path = handler
-			}
-		}
-
-		const callbacks = flatten(slice.call(arguments, offset))
-
-		if (callbacks.length === 0) {
-			throw new TypeError('argument handler is required')
-		}
-
-		for (let i = 0; i < callbacks.length; i++) {
-			const fn = callbacks[i]
-
-			if (typeof fn !== 'function') {
-				throw new TypeError('argument handler must be a function')
-			}
-
-			// add the middleware
-			debug('use %o %s', path, fn.name || '<anonymous>')
-
-			const layer = new Layer(
-				path,
-				{
-					sensitive: this.caseSensitive,
-					strict: false,
-					end: false,
-				},
-				fn,
-			)
-
-			layer.route = undefined
-
-			this.stack.push(layer)
-		}
-
-		return this
-	}
-
 	/**
 	 * Dispatch a req, res into the router.
 	 *
@@ -439,7 +313,7 @@ export default class Router implements Types.Router {
 	 */
 	public handle(
 		req: Types.IncomingRequest,
-		res: Types.OutgoingMessage,
+		res: Types.ServerResponse,
 		callback: Types.NextFunction,
 	): void {
 		if (!callback) {
@@ -645,6 +519,146 @@ export default class Router implements Types.Router {
 			}
 		}
 	}
+
+	public param(this: Router, name: string, handler: Types.RequestParamHandler): Router {
+		if (!name) {
+			throw new TypeError('argument name is required')
+		}
+
+		if (typeof name !== 'string') {
+			throw new TypeError('argument name must be a string')
+		}
+
+		if (!handler) {
+			throw new TypeError('argument fn is required')
+		}
+
+		if (typeof handler !== 'function') {
+			throw new TypeError('argument fn must be a function')
+		}
+
+		let params = this.params[name]
+
+		if (!params) {
+			params = this.params[name] = []
+		}
+
+		params.push(handler)
+
+		return this
+	}
+
+	/**
+	 * Create a new Route for the given path.
+	 *
+	 * Each route contains a separate middleware stack and VERB handlers.
+	 *
+	 * See the Route api documentation for details on adding handlers
+	 * and middleware to routes.
+	 *
+	 * @param {string} path
+	 * @return {Route}
+	 * @public
+	 */
+	public route(path: Types.PathParams): Route {
+		const route = new Route(path)
+
+		const layer = new Layer(
+			path,
+			{
+				sensitive: this.caseSensitive,
+				strict: this.strict,
+				end: true,
+			},
+			handle,
+		)
+
+		function handle(
+			req: Types.RoutedRequest,
+			res: Types.OutgoingMessage,
+			next: Types.NextFunction,
+		): void {
+			route.dispatch(req, res, next)
+		}
+
+		layer.route = route
+
+		this.stack.push(layer)
+		return route
+	}
+
+	public use(path: Types.PathParams, ...handlers: Types.RouteHandler[]): Router
+	public use(...handlers: Types.RouteHandler[]): Router
+	public use(...handlers: Types.RequestHandlerParams[]): Router
+	public use(handler: unknown): Router {
+		let offset: number = 0
+		let path: string = '/'
+
+		// default path to '/'
+		// disambiguate router.use([handler])
+		if (typeof handler !== 'function') {
+			let arg = handler
+
+			while (Array.isArray(arg) && arg.length !== 0) {
+				arg = arg[0]
+			}
+
+			// first arg is the path
+			if (typeof arg !== 'function') {
+				offset = 1
+				path = handler
+			}
+		}
+
+		const callbacks = flatten(slice.call(arguments, offset))
+
+		if (callbacks.length === 0) {
+			throw new TypeError('argument handler is required')
+		}
+
+		for (let i = 0; i < callbacks.length; i++) {
+			const fn = callbacks[i]
+
+			if (typeof fn !== 'function') {
+				throw new TypeError('argument handler must be a function')
+			}
+
+			// add the middleware
+			debug('use %o %s', path, fn.name || '<anonymous>')
+
+			const layer = new Layer(
+				path,
+				{
+					sensitive: this.caseSensitive,
+					strict: false,
+					end: false,
+				},
+				fn,
+			)
+
+			layer.route = undefined
+
+			this.stack.push(layer)
+		}
+
+		return this
+	}
+
+	/**
+	 * Use the given middleware function, with optional path, defaulting to "/".
+	 *
+	 * Use (like `.all`) will run for any http METHOD, but it will not add
+	 * handlers for those methods so OPTIONS requests will not consider `.use`
+	 * functions even if they could respond.
+	 *
+	 * The other difference is that _route_ path is stripped and not visible
+	 * to the handler function. The main effect of this feature is that mounted
+	 * handlers can operate without any code changes regardless of the "prefix"
+	 * pathname.
+	 *
+	 * @public
+	 */
+	public use(path: Types.PathParams, ...handlers: Types.RequestHandlerParams[]): Router
 
 	/**
 	 * Process any parameters for the layer.
