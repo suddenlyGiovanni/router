@@ -4,18 +4,18 @@ import { Buffer } from 'safe-buffer'
 import { methods } from '../src/methods'
 import Router, { Route } from '../src/router'
 import type * as Types from '../src/types'
-import * as Utils from './support/utils'
+import * as Utils from './support'
 
 describe('Router', () => {
-	// it('should return a function', () => {
-	// 	Utils.assert.equal(typeof Router(), 'function')
-	// })
+	it('should return a function', () => {
+		Utils.assert.equal(typeof Router(), 'function')
+	})
 
 	it('should return a function using new', () => {
 		Utils.assert.equal(typeof new Router(), 'function')
 	})
 
-	it('should reject missing callback', () => {
+	it.only('should reject missing callback', () => {
 		const router = new Router()
 		Utils.assert.throws(() => {
 			// @ts-expect-error
@@ -506,7 +506,7 @@ describe('Router', () => {
 			const router = new Router()
 			const server = Utils.createServer(router)
 
-			router.use((err, req, res, next) => {
+			router.use((_err, _req, _res, _next) => {
 				throw new Error('boom!')
 			})
 
@@ -546,7 +546,7 @@ describe('Router', () => {
 				const router = new Router()
 				const server = Utils.createServer(router)
 
-				router.use(function handle(req, res, next) {
+				router.use(function handle(_req, _res, _next) {
 					throw new Error('boom!')
 				})
 
@@ -561,7 +561,7 @@ describe('Router', () => {
 
 				router.use(sawError)
 
-				router.use((req, res, next) => {
+				router.use((_req, _res, _next) => {
 					throw new Error('boom!')
 				})
 

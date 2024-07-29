@@ -4,7 +4,7 @@ import { Buffer } from 'safe-buffer'
 import { methods } from '../src/methods'
 import Router from '../src/router'
 import type * as Types from '../src/types'
-import * as Utils from './support/utils'
+import * as Utils from './support'
 
 describe('Router', () => {
 	describe('.route(path)', () => {
@@ -84,7 +84,7 @@ describe('Router', () => {
 		it('should not error on empty route', (_, done) => {
 			const cb = Utils.after(2, done)
 			const router = new Router()
-			const route = router.route('/foo')
+			const _route = router.route('/foo')
 			const server = Utils.createServer(router)
 
 			Utils.request(server).get('/foo').expect(404, cb)
@@ -669,7 +669,7 @@ function helloWorld(_req: Types.RoutedRequest, res: Types.ServerResponse): void 
 	res.end('hello, world')
 }
 
-function setsaw(num: number): Types.RouteHandler {
+function _setsaw(num: number): Types.RouteHandler {
 	const name = `x-saw-${String(num)}`
 	return function hit({ method, url }, res, next) {
 		res.setHeader(name, `${method} ${url}`)

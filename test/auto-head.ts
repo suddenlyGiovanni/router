@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 
 import Router from '../src/router'
 import type * as Types from '../src/types'
-import * as Utils from './support/utils'
+import * as Utils from './support'
 
 describe('HEAD', () => {
 	it('should invoke get without head', (_, done) => {

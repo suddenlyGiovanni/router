@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 
 import Router from '../src/router'
 import type * as Types from '../src/types'
-import * as Utils from './support/utils'
+import * as Utils from './support'
 
 describe('FQDN url', () => {
 	it('should not obscure FQDNs', (_, done) => {
