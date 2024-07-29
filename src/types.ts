@@ -1,4 +1,5 @@
-import { type OutgoingMessage, type ServerResponse } from 'node:http'
+import type * as Http from 'node:http'
+import type { OutgoingMessage, ServerResponse } from 'node:http'
 export type { OutgoingMessage, ServerResponse }
 
 export type HttpMethods =
@@ -30,14 +31,15 @@ export type HttpMethods =
 	| 'unsubscribe'
 
 export interface RouterOptions {
-	strict?: boolean
 	caseSensitive?: boolean
 	mergeParams?: boolean
+	strict?: boolean
 }
 
-export interface IncomingRequest {
-	url?: string
-	method?: string
+export type Request = InstanceType<typeof Http.IncomingMessage>
+export type Response = InstanceType<typeof Http.ServerResponse> & { req: Request }
+
+export interface IncomingRequest extends Request {
 	originalUrl?: string
 	params?: Record<string, string>
 }
@@ -63,24 +65,24 @@ export type Route = Record<HttpMethods, RouterHandler<Route>> & {
 
 export type RequestParamHandler = (
 	req: IncomingRequest,
-	res: OutgoingMessage,
+	res: Response,
 	next: NextFunction,
 	value: string,
 	name: string,
 ) => void
 
 export interface RouteHandler {
-	(req: RoutedRequest, res: OutgoingMessage, next: NextFunction): void
+	(req: RoutedRequest, res: Response, next: NextFunction): void
 }
 
 export interface RequestHandler {
-	(req: IncomingRequest, res: OutgoingMessage, next: NextFunction): void
+	(req: IncomingRequest, res: Response, next: NextFunction): void
 }
 
 export type ErrorRequestHandler = (
 	err: any,
 	req: IncomingRequest,
-	res: OutgoingMessage,
+	res: Response,
 	next: NextFunction,
 ) => void
 
@@ -110,7 +112,7 @@ export type Router = Record<HttpMethods, RouterMatcher<Router>> & {
 	route(prefix: PathParams): Route
 }
 
-interface RouterConstructor {
+export interface RouterConstructor {
 	new (options?: RouterOptions): Router & RequestHandler
 	(options?: RouterOptions): Router & RequestHandler
 }
