@@ -1,23 +1,23 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
-import * as Utils from './utils'
+import { after } from './after'
 
-describe('rafter', () => {
+describe('after', () => {
 	test('exists', () => {
-		assert(typeof Utils.after === 'function', 'after is not a function')
+		assert(typeof after === 'function', 'after is not a function')
 	})
 
 	test('after when called with 0 invokes', (_, done) => {
-		Utils.after(0, done)
+		after(0, done)
 	})
 
 	test('after 1', (_, done) => {
-		const next = Utils.after(1, done)
+		const next = after(1, done)
 		next()
 	})
 
 	test('after 5', (_, done) => {
-		const next = Utils.after(5, done)
+		const next = after(5, done)
 		let i = 5
 
 		while (i--) {
@@ -26,7 +26,7 @@ describe('rafter', () => {
 	})
 
 	test('manipulate count', (_, done) => {
-		const next = Utils.after(1, done)
+		const next = after(1, done)
 		let i = 5
 
 		// @ts-expect-error count is set to readonly; modifying only for testing purposes
@@ -37,7 +37,7 @@ describe('rafter', () => {
 	})
 
 	test('after terminates on error', (_, done) => {
-		const next = Utils.after(2, (err: null | Error) => {
+		const next = after(2, (err: null | Error) => {
 			assert.equal(err?.message, 'test')
 			done()
 		})
@@ -46,14 +46,14 @@ describe('rafter', () => {
 	})
 
 	test('gee', (_, done) => {
-		const _done = Utils.after(2, done)
+		const _done = after(2, done)
 
 		function cb(err: null | Error): void {
 			assert.equal(err?.message, '1')
 			_done()
 		}
 
-		const next = Utils.after(3, cb, (err) => {
+		const next = after(3, cb, (err) => {
 			assert.equal(err?.message, '2')
 			_done()
 		})
@@ -64,14 +64,14 @@ describe('rafter', () => {
 	})
 
 	test('eee', (_, done) => {
-		const _done = Utils.after(3, done)
+		const _done = after(3, done)
 
 		function cb(err: null | Error): void {
 			assert.equal(err?.message, '1')
 			_done()
 		}
 
-		const next = Utils.after(3, cb, (err) => {
+		const next = after(3, cb, (err) => {
 			assert.equal(err?.message, '2')
 			_done()
 		})
@@ -87,7 +87,7 @@ describe('rafter', () => {
 			done()
 		}
 
-		const next = Utils.after(3, cb, (_err) => {
+		const next = after(3, cb, (_err) => {
 			// should not happen
 			assert.ok(false)
 		})
@@ -103,7 +103,7 @@ describe('rafter', () => {
 			done()
 		}
 
-		const next = Utils.after(3, cb, (_err) => {
+		const next = after(3, cb, (_err) => {
 			// should not happen
 			assert.ok(false)
 		})
@@ -114,7 +114,7 @@ describe('rafter', () => {
 	})
 
 	test('throws on too many calls', (_, done) => {
-		const next = Utils.after(1, done)
+		const next = after(1, done)
 		next()
 		assert.throws(next, /after called too many times/)
 	})
