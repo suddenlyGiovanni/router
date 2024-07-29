@@ -19,7 +19,7 @@ export function createHitHandle(num: number): Types.RouteHandler {
 
 export function createServer(router: Router): http.Server {
 	return http.createServer(function onRequest(req, res) {
-		router(req, res, finalhandler(req, res))
+		router.handle(req, res, finalhandler(req, res))
 	})
 }
 
@@ -130,11 +130,8 @@ export function rawrequest(server: http.Server): Test {
 	return _test
 }
 
-type Res = InstanceType<typeof http.ServerResponse> & {
-	req: InstanceType<typeof http.IncomingMessage>
-}
-export function shouldHaveBody(buf: Buffer): (res: unknown) => void {
-	return (res: Res): void => {
+export function shouldHaveBody(buf: Buffer) {
+	return (res: Types.Response): void => {
 		const body = !Buffer.isBuffer(res.body)
 			? Buffer.from(res.text) //
 			: res.body
@@ -143,26 +140,24 @@ export function shouldHaveBody(buf: Buffer): (res: unknown) => void {
 	}
 }
 
-export function shouldHitHandle(num: number): (res: Res) => void {
+export function shouldHitHandle(num: number): (res: Types.Response) => void {
 	const header = `x-fn-${String(num)}`
-	return (res): void => {
+	return (res) => {
 		assert.equal(res.headers[header], 'hit', `should hit handle ${num}`)
 	}
 }
 
-export function shouldNotHaveBody(): (res: Res) => void {
-	return (res): void => {
+export function shouldNotHaveBody(): (res: Types.Response) => void {
+	return (res) => {
 		assert.ok(res.text === '' || res.text === undefined)
 	}
 }
 
-export function shouldNotHitHandle(
-	num: number,
-): (res: InstanceType<typeof http.ServerResponse>) => void {
+export function shouldNotHitHandle(num: number): (res: Types.Response) => void {
 	return shouldNotHaveHeader(`x-fn-${String(num)}`)
 }
 
-function shouldNotHaveHeader(header: string): (res: Res) => void {
+function shouldNotHaveHeader(header: string): (res: Types.Response) => void {
 	return (res) => {
 		assert.ok(!(header.toLowerCase() in res.headers), `should not have header ${header}`)
 	}
