@@ -87,7 +87,7 @@ describe('OPTIONS', () => {
 	})
 })
 
-function saw({ method, url }: Types.RoutedRequest, res: Types.OutgoingMessage): void {
+function saw({ method, url }: Types.RoutedRequest, res: Types.ServerResponse): void {
 	const msg = `saw ${method} ${url}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')

@@ -64,7 +64,7 @@ function setsaw(num: number): Types.RouteHandler {
 	}
 }
 
-function saw({ method, url }: Types.RoutedRequest, res: Types.OutgoingMessage) {
+function saw({ method, url }: Types.RoutedRequest, res: Types.ServerResponse) {
 	const msg = `saw ${method} ${url}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')

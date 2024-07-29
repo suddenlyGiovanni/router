@@ -33,7 +33,7 @@ describe('HEAD', () => {
 	})
 })
 
-function saw({ method, url }: Types.IncomingRequest, res: Types.OutgoingMessage): void {
+function saw({ method, url }: Types.IncomingRequest, res: Types.ServerResponse): void {
 	const msg = `saw ${method} ${url}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')

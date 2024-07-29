@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test'
 
 import Router from '../src/router'
+import type * as Types from '../src/types'
 import * as Utils from './support/utils'
 
 describe('req.params', () => {
@@ -31,7 +32,7 @@ describe('req.params', () => {
 
 	it('should overwrite value outside the router', (_, done) => {
 		const router = new Router()
-		const server = Utils.createServer((req, res, next) => {
+		const server = Utils.createServer((req, res, _next) => {
 			req.params = { foo: 'bar' }
 			router(req, res, done)
 		})
@@ -169,7 +170,7 @@ describe('req.params', () => {
 	})
 })
 
-function hitParams(num: number) {
+function hitParams(num: number): Types.RouteHandler {
 	const name = `x-params-${String(num)}`
 	return function hit({ params }, res, next): void {
 		res.setHeader(name, JSON.stringify(params))
@@ -177,7 +178,7 @@ function hitParams(num: number) {
 	}
 }
 
-function sawParams({ params }, res): void {
+function sawParams({ params }: Types.RoutedRequest, res: Types.ServerResponse): void {
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'application/json')
 	res.end(JSON.stringify(params))

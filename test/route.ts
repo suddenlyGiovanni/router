@@ -3,6 +3,7 @@ import { Buffer } from 'safe-buffer'
 
 import { methods } from '../src/methods'
 import Router from '../src/router'
+import type * as Types from '../src/types'
 import * as Utils from './support/utils'
 
 describe('Router', () => {
@@ -474,7 +475,7 @@ describe('Router', () => {
 					res.end(`caught: ${err.message}`)
 				})
 
-				router.use(function handleError(err, req, res, next) {
+				router.use(function handleError(err, _req, res, _next) {
 					res.statusCode = 500
 					res.end(`caught: ${err.message}`)
 				})
@@ -662,13 +663,13 @@ describe('Router', () => {
 	})
 })
 
-function helloWorld(req, res) {
+function helloWorld(_req: Types.RoutedRequest, res: Types.ServerResponse): void {
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')
 	res.end('hello, world')
 }
 
-function setsaw(num: number) {
+function setsaw(num: number): Types.RouteHandler {
 	const name = `x-saw-${String(num)}`
 	return function hit({ method, url }, res, next) {
 		res.setHeader(name, `${method} ${url}`)
@@ -676,14 +677,14 @@ function setsaw(num: number) {
 	}
 }
 
-function saw({ method, url }, res) {
+function saw({ method, url }: Types.RoutedRequest, res: Types.ServerResponse): void {
 	const msg = `saw ${method} ${url}`
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'text/plain')
 	res.end(msg)
 }
 
-function sendParams(req, res) {
+function sendParams(req: Types.RoutedRequest, res: Types.ServerResponse): void {
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'application/json')
 	res.end(JSON.stringify(req.params))
