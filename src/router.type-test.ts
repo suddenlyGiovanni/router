@@ -1,7 +1,18 @@
-import { type OutgoingMessage, createServer } from 'node:http'
+import * as http from 'node:http'
 
 import Router from './router'
 import type * as Types from './types'
+
+// Type test helper methods
+type Compute<T> = T extends (...args: any[]) => any ? T : { [K in keyof T]: Compute<T[K]> }
+
+type Equal<X, Y> = (<T>() => T extends Compute<X> ? 1 : 2) extends <T>() => T extends Compute<Y>
+	? 1
+	: 2
+	? true
+	: false
+
+type Expect<T extends true> = T extends true ? true : never
 
 const options: Types.RouterOptions = {
 	strict: false,
@@ -10,12 +21,12 @@ const options: Types.RouterOptions = {
 }
 
 // new constructor
-new Router().all('/', (req, res, next) => {})
+new Router().all('/', (_req, _res, _next) => {})
 // direct call
 // Router().all('/', (req, res, next) => {})
 
 const router = new Router(options)
-const routerHandler: Types.RouteHandler = (_req, res, next) => {
+const routerHandler: Types.RouteHandler = (_req, res, _next) => {
 	res.setHeader('Content-Type', 'plain/text')
 	res.write('Hello')
 	res.end('world')
@@ -36,7 +47,7 @@ router['m-search']('/', routerHandler)
 // param
 router.param('user_id', (req, res, next, id) => {
 	type TReq = Expect<Equal<typeof req, Types.IncomingRequest>>
-	type TRes = Expect<Equal<typeof res, OutgoingMessage>>
+	type TRes = Expect<Equal<typeof res, http.OutgoingMessage>>
 	type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 	type P1 = Expect<Equal<typeof id, string>>
 })
@@ -44,13 +55,13 @@ router.param('user_id', (req, res, next, id) => {
 // middleware
 router.use((req, res, next) => {
 	type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
-	type TRes = Expect<Equal<typeof res, OutgoingMessage>>
+	type TRes = Expect<Equal<typeof res, http.OutgoingMessage>>
 	type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 	next()
 })
 
 // RoutedRequest is extended with properties without type errors
-router.use((req, res, next) => {
+router.use((req, _res, next) => {
 	req.extendable = 'extendable'
 	next()
 })
@@ -59,29 +70,18 @@ router
 	.route('/')
 	.all((req, res, next) => {
 		type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
-		type TRes = Expect<Equal<typeof res, OutgoingMessage>>
+		type TRes = Expect<Equal<typeof res, http.OutgoingMessage>>
 		type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 		next()
 	})
 	.get((req, res, next) => {
 		type TReq = Expect<Equal<typeof req, Types.RoutedRequest>>
-		type TRes = Expect<Equal<typeof res, OutgoingMessage>>
+		type TRes = Expect<Equal<typeof res, http.OutgoingMessage>>
 		type TNext = Expect<Equal<typeof next, Types.NextFunction>>
 	})
 
 // valid for router from createServer
-createServer((req, res) => {
+http.createServer((req, res) => {
 	// router(req, res, (err) => {})
 	router.handle(req, res, (_err) => {})
 })
-
-// Type test helper methods
-type Compute<T> = T extends (...args: any[]) => any ? T : { [K in keyof T]: Compute<T[K]> }
-
-type Equal<X, Y> = (<T>() => T extends Compute<X> ? 1 : 2) extends <T>() => T extends Compute<Y>
-	? 1
-	: 2
-	? true
-	: false
-
-type Expect<T extends true> = T extends true ? true : never
