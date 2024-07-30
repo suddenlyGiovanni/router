@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 
 import Router from './router'
 import type * as Types from './types'
-import * as Utils from '../test/support'
+import * as Utils from './test/support'
 
 describe('req.params', () => {
 	it('should default to empty object', (_, done) => {

@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 
 import Router from './router'
 import type * as Types from './types'
-import * as Utils from '../test/support'
+import * as Utils from './test/support'
 
 describe('OPTIONS', () => {
 	it('should respond with defined routes', (_, done) => {

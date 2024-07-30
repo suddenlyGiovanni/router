@@ -4,7 +4,7 @@ import { Buffer } from 'safe-buffer'
 import { methods } from './methods'
 import Router from './router'
 import type * as Types from './types'
-import * as Utils from '../test/support'
+import * as Utils from './test/support'
 
 describe('Router', () => {
 	describe('.route(path)', () => {

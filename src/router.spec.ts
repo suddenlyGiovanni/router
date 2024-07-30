@@ -1,10 +1,10 @@
 import { describe, it } from 'node:test'
 import { Buffer } from 'safe-buffer'
 
-import { methods } from '../src/methods'
-import Router, { Route } from '../src/router'
-import type * as Types from '../src/types'
-import * as Utils from './support'
+import { methods } from './methods'
+import Router, { Route } from './router'
+import type * as Types from './types'
+import * as Utils from './test/support'
 
 describe('Router', () => {
 	it('should return a function', () => {
