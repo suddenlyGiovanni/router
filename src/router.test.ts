@@ -23,6 +23,30 @@ describe('Router', () => {
 		}, /argument callback is required/)
 	})
 
+	it.skip('should be callable as a function', () => {
+		// @ts-expect-error
+		const router = Router()
+		Utils.assert.equal(typeof router, 'function')
+		Utils.assert(router instanceof Router)
+	})
+
+	it.skip('should be instantiable using new', () => {
+		const router = new Router()
+		Utils.assert.equal(typeof router, 'function')
+		Utils.assert(router instanceof Router)
+	})
+
+	it.skip('should have access to Router methods and be callable', () => {
+		// @ts-expect-error
+		const router1 = Router()
+		Utils.assert.equal(typeof router1.get, 'function')
+		Utils.assert.equal(typeof router1, 'function')
+
+		const router2 = new Router()
+		Utils.assert.equal(typeof router2.get, 'function')
+		Utils.assert.equal(typeof router2, 'function')
+	})
+
 	it('should invoke callback without "req.url"', (_, done) => {
 		const router = new Router()
 		router.use(saw)
